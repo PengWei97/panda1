@@ -1,35 +1,27 @@
-# (elastic_energy-elasticity_energy)/(dh/dgr0+dh/dgr1)*delasticity_energy/dgr0
-# 01:修改variables模块中的polycrystalVariables，可以模拟
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 10
-  ny = 3
+  nx = 20
+  ny = 6
   xmax = 1000
   ymax = 1000
   elem_type = QUAD4
-  uniform_refine = 2
+  uniform_refine = 1
 []
 
 [GlobalParams]
   op_num = 2
   var_name_base = gr
+  length_scale = 1.0e-9
+  time_scale = 1.0e-6
+  pressure_scale = 1.0e6
+  # use_displaced_mesh = False
 []
 
 [Variables]
-#   [./PolycrystalVariables]
-    # op_num = 2
-    # var_name_base = gr
-    # initial_from_file = true # take the initial condition of all polycrystal variables from the mesh file
-    # scaling = 1 # Specifies a scaling factor to apply to this variable
-#   [../]
-  [./gr0]
-    order = FIRST
-    family = LAGRANGE
-  [../]
-  [./gr1]
-    order = FIRST
-    family = LAGRANGE
+  [./PolycrystalVariables]
+     # PhaseFieldApp
+     # Variables/PolycrystalVariables --> PolycrystalVariablesAction
   [../]
   [./disp_x]
   [../]
@@ -40,6 +32,8 @@
 [ICs]
   [./PolycrystalICs]
     [./BicrystalBoundingBoxIC]
+     # PhaseFieldApp
+     # ICs/PolycrystalICs/BicrystalBoundingBoxIC --> BicrystalBoundingBoxICAction
       x1 = 0
       y1 = 0
       x2 = 500
@@ -65,23 +59,11 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./stress11] # 总的应力
+  [./unique_grains]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./stress12]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./stress22]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./unique_grains] # 晶粒数目
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./var_indices] # 序参数的索引，如gr5表示的晶粒为5
+  [./var_indices]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -89,7 +71,7 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./active_bounds_elemental] # 激活的边界单元
+  [./active_bounds_elemental]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -101,19 +83,33 @@
 
 [Kernels]
   [./PolycrystalKernel]
-     # op_num = 2
-     # var_name_base = gr
-     # use_displaced_mesh = false 
-     # kernel: ACGrGrPoly(局部自由能), ACInterface(界面能), TimeDerivative,ACGBPoly(用于插入气泡的模拟)
      # registerSyntax("PolycrystalKernelAction", "Kernels/PolycrystalKernel");
+     # input:_op_num = int,_var_name_base = gr
+     # kernel:
+          # ACGrGrPoly: Interface Allen-Cahn Kernel,
+            # \mu*(\eta_1^3-\eta_1+2*\gamma*\eta_1*\eta_2^2) for bicrystal
+          # ACInterface: the Gradient energy Allen-Cahn Kernel
+          # TimeDerivative:
+          # ACGBPoly: 保守场序参量和非保守场序参量之间的耦合项，用于表示沉淀
   [../]
-  [./PolycrystalElasticDrivingForce]
-     # op_num = 2
-     # var_name_base = gr
-     # use_displaced_mesh = false 
-     # registerSyntax("PolycrystalElasticDrivingForceAction", "Kernels/PolycrystalElasticDrivingForce");
+  # [./PolycrystalElasticDrivingForce]
+  #   # registerSyntax("PolycrystalElasticDrivingForceAction", "Kernels/PolycrystalElasticDrivingForce");
+  #   # ACGrGrElasticDrivingForce
+  # [../]
+  [./AC_ElasticDrivingForce_gr0]
+    type = ACGrGrElasticDrivingForce
+    variable = gr0
+    D_tensor_name = delasticity_tensor/dgr0
+  [../]
+  [./AC_ElasticDrivingForce_gr1]
+    type = ACGrGrElasticDrivingForce
+    variable = gr1
+    D_tensor_name = delasticity_tensor/dgr1
   [../]
   [./TensorMechanics]
+    # registerSyntax("LegacyTensorMechanicsAction", "Kernels/TensorMechanics");
+    # 这个遗留操作很快就会被弃用，取而代之的是更具包容性的TensorMechanics/MasterAction。
+    # LegacyTensorMechanicsAction 是一个方便的对象，它简化了张量力学系统设置的一部分。 它添加了 StressDivergence Kernels（对于当前坐标系）。
     displacements = 'disp_x disp_y'
   [../]
 []
@@ -121,6 +117,7 @@
 [AuxKernels]
   [./bnds_aux]
     type = BndsCalcAux
+    # 用于可视化晶界
     variable = bnds
     execute_on = timestep_end
   [../]
@@ -215,14 +212,18 @@
     block = 0
     T = 500 # K
     wGB = 75 # nm
-    GBmob0 = 2.5e-6 # m^4/(Js) from Schoenfelder 1997
-    Q = 0.23 # Migration energy in eV
-    GBenergy = 0.708 # GB energy in J/m^2
-    time_scale = 1.0e-6
+    GBmob0 = 2.5e-6 #m^4/(Js) from Schoenfelder 1997
+    Q = 0.23 #Migration energy in eV
+    GBenergy = 0.708 #GB energy in J/m^2
+    # time_scale = 1.0e-6 # \mu s
+    # length_scale = 1.0e-9 # nm
   [../]
   [./ElasticityTensor]
     type = ComputePolycrystalElasticityTensor
     grain_tracker = grain_tracker
+    # length_scale = 1.0e-9
+    # pressure_scale = 1.0e6
+    outputs = Exodus
   [../]
   [./strain]
     type = ComputeSmallStrain
@@ -251,7 +252,8 @@
     fill_method = symmetric9
     C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
 
-    outputs = none
+    # outputs = Exodus
+    # 序参数重映射算法，用于减少序参数的数目
   [../]
 []
 
@@ -285,7 +287,7 @@
   nl_rel_tol = 1e-9
 
   start_time = 0.0
-  num_steps = 10
+  num_steps = 30
   dt = 0.2
 
   [./Adaptivity]
@@ -296,35 +298,23 @@
   [../]
 []
 
-# 修改outputs
 [Outputs]
   execute_on = 'timestep_end'
-#   file_base = poly1600_grtracker_rand
-#  csv = true
-  [./csv]
-    type = CSV
-    interval = 1
-  [../]
-  [./exodus]
+  [./Exodus]
     type = Exodus
-    interval = 1
-    # append_date = true # 添加输出时间
-    end_step = 5
+    # interval = 1
+    # end_step = 5
   [../]
-  [./console]
-    type = Console
-    max_rows = 20 # Will print the 20 most recent postprocessor values to the screen
-  [../]
-#   [out]
-#     type = Checkpoint
-#     interval = 10
-#     num_files = 6
-#   []
-  [pgraph]
+  [./pgraph]
     type = PerfGraphOutput
     execute_on = 'initial final'  # Default is "final"
+    # execute_on = 'timestep_end'
     level = 2                     # Default is 1
     heaviest_branch = true        # Default is false
     heaviest_sections = 7         # Default is 0
   []
+  [./csv]
+    type = CSV
+    # interval = 1
+  [../]
 []
