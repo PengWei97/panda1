@@ -36,7 +36,8 @@ ComputePolycrystalElasticityTensorCP::ComputePolycrystalElasticityTensorCP(
     _op_num(coupledComponents("v")),
     _vals(coupledValues("v")),
     _D_elastic_tensor(_op_num),
-    _JtoeV(6.24150974e18)
+    _JtoeV(6.24150974e18),
+    _op_to_grains_cp(declareProperty<unsigned int>("op_to_grains_cp"))
 {
   // Loop over variables (ops)
   for (MooseIndex(_op_num) op_index = 0; op_index < _op_num; ++op_index)
@@ -52,6 +53,9 @@ ComputePolycrystalElasticityTensorCP::computeQpElasticityTensor()
 {
   // Get list of active order parameters from grain tracker
   const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
+
+  // _op_to_grains_cp[_qp] = op_to_grains.size();
+
 
   // Calculate elasticity tensor
   _elasticity_tensor[_qp].zero();

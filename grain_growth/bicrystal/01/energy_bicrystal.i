@@ -3,9 +3,9 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 20
-  ny = 6
-  xmax = 1000
+  nx = 100
+  ny = 50
+  xmax = 2000
   ymax = 1000
   elem_type = QUAD4
   uniform_refine = 1
@@ -38,7 +38,7 @@
      # ICs/PolycrystalICs/BicrystalBoundingBoxIC --> BicrystalBoundingBoxICAction
       x1 = 0
       y1 = 0
-      x2 = 500
+      x2 = 1000
       y2 = 1000
     [../]
   [../]

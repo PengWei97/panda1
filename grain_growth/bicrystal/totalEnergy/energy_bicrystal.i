@@ -103,7 +103,7 @@
   #   # ACGrGrElasticDrivingForce
   # [../]
   [./AC_ElasticDrivingForce_gr0]
-    type = ACGrGrElasticEnergy
+    type = ACGrGrElasticEnergy # 自定义
     variable = gr0
     D_tensor_name = delasticity_tensor/dgr0
   [../]
@@ -234,7 +234,7 @@
     # L = 34, M_GB = 1900, act_wGB = 0.5, entropy_diff = 5.0e22, gamma_asymm = 1.5, kappa_op = 2500, l_gb = 75 nm, modular_volume = 2.5e22, mu = 0.35, sigma = 4.4
   [../]
   [./ElasticityTensor]
-    type = ComputePolycrystalElasticityTensorCP
+    type = ComputePolycrystalElasticityTensorCP # 自定义
     grain_tracker = grain_tracker
     # length_scale = 1.0e-9
     # pressure_scale = 1.0e6
@@ -258,6 +258,15 @@
     # outputs = Exodus
     # stress_ij,elastic_strain_ij,Jacobian_mult_ijkl
   [../]
+  [./free_energy]
+    type = DerivativeParsedMaterial
+    f_name= F
+    args = 'gr0 gr1'
+    material_property_names = 'mu gamma_asymm'
+    function = 'mu*( gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2) + 1.0/4.0'
+    derivative_order = 2
+    enable_jit = true
+  [../]
 []
 
 [UserObjects]
@@ -266,7 +275,7 @@
     file_name = test.tex
   [../]
   [./grain_tracker]
-    type = GrainTrackerElasticityCP
+    type = GrainTrackerElasticityCP # 自定义
     connecting_threshold = 0.05
     compute_var_to_feature_map = true
     flood_entity_type = elemental
@@ -280,15 +289,6 @@
     # outputs = Exodus
     # 序参数重映射算法，用于减少序参数的数目
     # 没有输出的变量
-  [../]
-  [./free_energy]
-    type = DerivativeParsedMaterial
-    f_name= F
-    args = 'gr0 gr1'
-    material_property_names = 'mu gamma_asymm'
-    function = 'mu*( gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2) + 1.0/4.0'
-    derivative_order = 2
-    enable_jit = true
   [../]
 []
 

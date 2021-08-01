@@ -4,9 +4,9 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 20
-  ny = 6
-  xmax = 1000
+  nx = 40
+  ny = 12
+  xmax = 2000
   ymax = 1000
   elem_type = QUAD4
   uniform_refine = 1
@@ -15,8 +15,8 @@
 [GlobalParams]
   op_num = 2
   var_name_base = gr
-  length_scale = 1.0e-9
-  time_scale = 1.0e-6
+  length_scale = 1.0e-9 # ns
+  time_scale = 1.0e-6 #  μs
   pressure_scale = 1.0e6
   # use_displaced_mesh = False
 []
@@ -39,7 +39,7 @@
      # ICs/PolycrystalICs/BicrystalBoundingBoxIC --> BicrystalBoundingBoxICAction
       x1 = 0
       y1 = 0
-      x2 = 500
+      x2 = 1000
       y2 = 1000
     [../]
   [../]
@@ -287,7 +287,8 @@
     # 输出：
       # delasticity_tensor/dgr0_ijkl,delasticity_tensor/dgr1_ijkl
       # elasticity_tensor_ijkl
-      # effective_stiffness
+      # effective_stiffness no
+    outputs = Exodus
   [../]
   [./strain]
     type = ComputeSmallStrain
@@ -304,11 +305,11 @@
     # stress_ij,elastic_strain_ij,Jacobian_mult_ijkl
   [../]
 
-  [./elasticenergy]
-    type = GGElasticEnergyMaterial
-    args = 'gr0 gr1'
-    outputs = Exodus
-  [../]
+  # [./elasticenergy]
+  #   type = GGElasticEnergyMaterial
+  #   args = 'gr0 gr1'
+  #   outputs = Exodus
+  # [../]
   [./free_energy]
     type = DerivativeParsedMaterial
     f_name= F
@@ -374,7 +375,7 @@
   nl_rel_tol = 1e-9
 
   start_time = 0.0
-  num_steps = 5
+  num_steps = 400
   dt = 0.2
 
   [./Adaptivity]
@@ -390,7 +391,7 @@
   execute_on = 'timestep_end'
   [./Exodus]
     type = Exodus
-    # interval = 1
+    interval = 2
     # end_step = 5
   [../]
   [./pgraph]

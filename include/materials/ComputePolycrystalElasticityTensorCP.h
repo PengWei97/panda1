@@ -45,4 +45,6 @@ protected:
 
   /// Conversion factor from J to eV
   const Real _JtoeV;
+
+  MaterialProperty<unsigned int> & _op_to_grains_cp;
 };
