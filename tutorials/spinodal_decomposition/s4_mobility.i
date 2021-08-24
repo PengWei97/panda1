@@ -102,7 +102,7 @@
                 (Afe*c+Bfe*(1-c)+Cfe*c*log(c)+Dfe*(1-c)*log(1-c)+
                 Efe*c*(1-c)+Ffe*c*(1-c)*(2*c-1)+Gfe*c*(1-c)*(2*c-1)^2))'
     derivative_order = 1
-    outputs = exodus
+    # outputs = exodus
   [../]
   [./local_energy]           # Local free energy function (eV/mol)
     type = DerivativeParsedMaterial
@@ -186,7 +186,7 @@
 []
 
 [Outputs]
-  exodus = true
+  # exodus = true
   console = true
   csv = true
   [./console]

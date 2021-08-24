@@ -24,7 +24,7 @@
   [./c]   # Mole fraction of Cr (unitless)
     order = FIRST
     family = LAGRANGE
-    scaling = 1e+04
+    # scaling = 1e+04
   [../]
   [./w]   # Chemical potential (eV/mol)
     order = FIRST
@@ -120,7 +120,7 @@
                 (Afe*c+Bfe*(1-c)+Cfe*c*log(c)+Dfe*(1-c)*log(1-c)+
                 Efe*c*(1-c)+Ffe*c*(1-c)*(2*c-1)+Gfe*c*(1-c)*(2*c-1)^2))'
     derivative_order = 1
-    outputs = exodus
+    # outputs = exodus
   [../]
   [./local_energy]           # Local free energy function (eV/mol)
     type = DerivativeParsedMaterial
@@ -183,6 +183,10 @@
   [../]
 []
 
+[Debug]
+  show_var_residual_norms = true
+[]
+
 [Executioner]
   type = Transient
   solve_type = NEWTON
@@ -195,6 +199,7 @@
                          -sub_pc_type -pc_asm_overlap'
   petsc_options_value = 'asm      31                  preonly
                          ilu          1'
+  automatic_scaling = true
   [./TimeStepper]
     type = IterationAdaptiveDT
     dt = 10
@@ -210,7 +215,7 @@
 []
 
 [Outputs]
-  exodus = true
+  # exodus = true
   console = true
   csv = true
   [./console]
