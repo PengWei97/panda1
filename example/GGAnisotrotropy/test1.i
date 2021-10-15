@@ -78,11 +78,16 @@
 [Materials]
   [./CuGrGranisotropic]
     type = GBAnisotropy
-    T = 600 # K
+    T = 600 # Kelvin
     # molar_volume_value = 7.11e-6 # Units:m^3/mol
     Anisotropic_GB_file_name = anisotropy_mobility.txt   # anisotropy_energy.txt
     inclination_anisotropy = false # true
     # wGB = 50 
+    # length_scale = 1.0e-9
+    # time_scale = 1.0e-9
+    # delta_sigma = 0.1
+    # delta_mob = 0.1
+    
   [../]
 []
 
@@ -117,7 +122,7 @@
   nl_max_its = 40
   nl_rel_tol = 1e-9
 
-  num_steps = 20
+  num_steps = 30
   # dt = 10.0
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -136,7 +141,7 @@
 
 [Outputs]
   file_base = outputs/test1
-  execute_on = 'timestep_end'
+  execute_on = 'initial timestep_end'
   exodus = true
   csv = true
 []
