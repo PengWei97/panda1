@@ -126,6 +126,7 @@
 []
 
 [Outputs]
+  file_base = test3_out/test3
   execute_on = 'timestep_end'
   exodus = true
   csv = true

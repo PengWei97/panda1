@@ -161,6 +161,7 @@
 []
 
 [Outputs]
+  file_base = test2_out/test2
   execute_on = 'timestep_end'
   exodus = true
   csv = true

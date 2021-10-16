@@ -138,6 +138,7 @@
 []
 
 [Outputs]
+  file_base = testwidth1_out/testwidth1
   execute_on = 'timestep_end'
   exodus = true
 []
