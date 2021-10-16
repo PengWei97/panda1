@@ -119,9 +119,22 @@
   nl_rel_tol = 1e-10
   nl_abs_tol = 1e-11
 
-  num_steps = 2
+  start_time = 0.0
+  end_time = 300.0
+  # dt = 10.0
+  [./TimeStepper]
+    type = IterationAdaptiveDT
+    dt = 10 # Initial time step.  In this simulation it changes.
+    optimal_iterations = 6 # Time step will adapt to maintain this number of nonlinear iterations
+  [../]
 
-  dt = 10
+  [./Adaptivity]
+    # Block that turns on mesh adaptivity. Note that mesh will never coarsen beyond initial mesh (before uniform refinement)
+    initial_adaptivity = 3 # Number of times mesh is adapted to initial condition
+    refine_fraction = 0.7 # Fraction of high error that will be refined
+    coarsen_fraction = 0.1 # Fraction of low error that will coarsened
+    max_h_level = 5 # Max number of refinements used, starting from initial mesh (before uniform refinement)
+  [../]
 []
 
 [Outputs]

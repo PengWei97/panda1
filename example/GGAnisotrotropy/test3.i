@@ -16,7 +16,7 @@
 [GlobalParams]
   op_num = 2
   var_name_base = gr
-  wGB = 100
+  wGB = 10
   length_scale = 1.0e-9
   time_scale = 1.0e-9
 []
@@ -107,8 +107,22 @@
   nl_max_its = 40
   nl_rel_tol = 1e-9
 
-  num_steps = 1
-  dt = 150.0
+  start_time = 0.0
+  end_time = 300.0
+  # dt = 10.0
+  [./TimeStepper]
+    type = IterationAdaptiveDT
+    dt = 10 # Initial time step.  In this simulation it changes.
+    optimal_iterations = 6 # Time step will adapt to maintain this number of nonlinear iterations
+  [../]
+
+  [./Adaptivity]
+    # Block that turns on mesh adaptivity. Note that mesh will never coarsen beyond initial mesh (before uniform refinement)
+    initial_adaptivity = 3 # Number of times mesh is adapted to initial condition
+    refine_fraction = 0.7 # Fraction of high error that will be refined
+    coarsen_fraction = 0.1 # Fraction of low error that will coarsened
+    max_h_level = 5 # Max number of refinements used, starting from initial mesh (before uniform refinement)
+  [../]
 []
 
 [Outputs]
