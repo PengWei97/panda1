@@ -134,7 +134,7 @@
   nl_rel_tol = 1e-8 # Absolute tolerance for nonlienar solves
 
   start_time = 0.0
-  end_time = 8000
+  end_time = 1000
 
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -152,7 +152,7 @@
 []
 
 [Outputs]
-  file_base = grain_growth_2D_voronoi/voronoi_2D
+  file_base = grain_growth_2D_voronoi_2/voronoi_2D
   exodus = true
   csv = true
   [./console]

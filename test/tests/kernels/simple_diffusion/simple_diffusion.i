@@ -2,7 +2,9 @@
   type = GeneratedMesh
   dim = 2
   nx = 10
-  ny = 10
+  ny = 40
+  xmax = 40
+  ymax = 10
 []
 
 [Variables]
@@ -37,6 +39,8 @@
   solve_type = 'PJFNK'
   petsc_options_iname = '-pc_type -pc_hypre_type'
   petsc_options_value = 'hypre boomeramg'
+  # start_time = 0.0
+  # end_time = 
 []
 
 [Outputs]

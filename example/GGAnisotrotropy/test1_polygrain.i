@@ -1,24 +1,24 @@
 [Mesh]
   type = GeneratedMesh
-  dim = 2
-  nx = 60
-  ny = 30
-  nz = 0
-  xmin = 0
-  xmax = 1000
-  ymin = 0
-  ymax = 600
+  dim = 2 # Problem dimension
+  nx = 10 # Number of elements in the x-direction
+  ny = 10 # Number of elements in the y-direction
+  nz = 0 # Number of elements in the z-direction
+  xmin = 0    # minimum x-coordinate of the mesh
+  xmax = 1000 # maximum x-coordinate of the mesh
+  ymin = 0    # minimum y-coordinate of the mesh
+  ymax = 1000 # maximum y-coordinate of the mesh
   zmin = 0
   zmax = 0
-  elem_type = QUAD4
+  elem_type = QUAD4 # Type of elements used in the mesh
+  uniform_refine = 4 # Initial uniform refinement of the mesh
+
+  parallel_type = replicated # Periodic BCs
 []
 
 [GlobalParams]
-  op_num = 3
-  var_name_base = gr
-  wGB = 10
-  length_scale = 1.0e-9
-  time_scale = 1.0e-9
+  op_num = 10 # Number of grains
+  var_name_base = gr # Base name of grains
 []
 
 [Variables]
@@ -32,9 +32,8 @@
 
 [ICs]
   [./PolycrystalICs]
-    [./Tricrystal2CircleGrainsIC]
-      # action
-      # op_num = 3 
+    [./PolycrystalRandomIC]
+      random_type = discrete
     [../]
   [../]
 []
@@ -78,7 +77,7 @@
 [Materials]
   [./CuGrGranisotropic]
     type = GBAnisotropy
-    T = 600 # Kelvin
+    T = 450 # Kelvin
     # molar_volume_value = 7.11e-6 # Units:m^3/mol
     Anisotropic_GB_file_name = anisotropy_mobility.txt   # anisotropy_energy.txt
     inclination_anisotropy = false # true
@@ -87,6 +86,7 @@
     # time_scale = 1.0e-9
     # delta_sigma = 0.1
     # delta_mob = 0.1
+    wGB = 14 # Width of the diffuse GB
     outputs = exodus
   [../]
 []
@@ -105,6 +105,11 @@
     type = ElementIntegralVariablePostprocessor
     variable = gr2
   [../]
+  [./num_grains]
+    type = FeatureFloodCount
+    variable = bnds
+    threshold = 0.7
+  [../]
 []
 
 [Executioner]
@@ -122,12 +127,13 @@
   nl_max_its = 40
   nl_rel_tol = 1e-9
 
-  num_steps = 30
-  # dt = 10.0
+  start_time = 0.0
+  end_time = 4000
   [./TimeStepper]
     type = IterationAdaptiveDT
-    dt = 10 # Initial time step.  In this simulation it changes.
-    optimal_iterations = 6 # Time step will adapt to maintain this number of nonlinear iterations
+    dt = 0.5 # Initial time step.  In this simulation it changes.
+    optimal_iterations = 8 # Time step will adapt to maintain this number of nonlinear iterations
+    growth_factor = 1.25
   [../]
 
   [./Adaptivity]
@@ -140,7 +146,7 @@
 []
 
 [Outputs]
-  file_base = test1_out4/test1
+  file_base = test1_polygrain/polygrain
   execute_on = 'initial timestep_end'
   exodus = true
   csv = true
