@@ -50,22 +50,22 @@
 [Executioner]
   type = Transient   # Here we use the Transient Executioner (instead of steady)
   solve_type = 'PJFNK'
-  # num_steps = 75 # Run for 75 time steps, solving the system each step.
-  # dt = 1 # each time step will have duration "1"
-  start_time = 0.0
-  end_time = 2000
+  num_steps = 150 # Run for 75 time steps, solving the system each step.
+  dt = 0.5 # each time step will have duration "1"
+  # start_time = 0.0
+  # end_time = 2000
 
-  [TimeStepper]
-    type = IterationAdaptiveDT
-    cutback_factor = 0.9
-    dt = 10.0
-    growth_factor = 1.5
-    optimal_iterations = 7
-  []
+  # [TimeStepper]
+  #   type = IterationAdaptiveDT
+  #   cutback_factor = 0.9
+  #   dt = 10.0
+  #   growth_factor = 1.5
+  #   optimal_iterations = 7
+  # []
 []
 
 [Outputs]
-  file_base = diffusion_1
-  execute_on = 'timestep_end'
+  # file_base = diffusion_1
+  execute_on = 'initial timestep_end'
   exodus = true
 []
