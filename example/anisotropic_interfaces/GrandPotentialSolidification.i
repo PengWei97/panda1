@@ -289,13 +289,13 @@
    [./err_eta]
      type = ErrorFractionMarker
      coarsen = 0.3
-     refine = 0.95
+     refine = 0.001
      indicator = ind_eta
    [../]
    [./err_bnds]
      type = ErrorFractionMarker
      coarsen = 0.3
-     refine = 0.95
+     refine = 0.001
      indicator = ind_bnds
    [../]
  [../]
@@ -312,6 +312,7 @@
 []
 
 [Outputs]
+  file_base = ./GrandPotentialSolidification/GrandPotentialSolidification_out
   interval = 5
   exodus = true
 []

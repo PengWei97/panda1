@@ -147,7 +147,7 @@
       type = ValueThresholdMarker
       third_state = DO_NOTHING
       coarsen = 1.0
-      refine = 0.99
+      refine = 0.7
       variable = bnds
       invert = true
     [../]
