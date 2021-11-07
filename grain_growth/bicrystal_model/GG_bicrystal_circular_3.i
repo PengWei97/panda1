@@ -8,7 +8,7 @@ my_length_scale = 1.0e-9
 my_time_scale = 1.0e-9 # miu s
 my_wGB = 15 # nm
 my_T = 500
-my_filename = 'GG_bicrystal_circular_2_results'
+my_filename = 'GG_bicrystal_circular_3_results'
 my_number_adaptivity = 8
 my_displacement = 0 # 25.0e2 # 10 10 2% 500*5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
@@ -18,14 +18,16 @@ my_end_time = 40000
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 32
-  ny = 32
+  nx = 16
+  ny = 16
+  nz = 0
   xmin = 0
   xmax = 64e3
   ymin = 0
   ymax = 64e3
+  zmin = 0
+  zmax = 0
   elem_type = QUAD4
-  
   parallel_type = distributed
 []
 
@@ -439,7 +441,7 @@ my_end_time = 40000
     cycles_per_step = 2 # The number of adaptivity cycles per step
     refine_fraction = 0.5 # The fraction of elements or error to refine.
     coarsen_fraction = 0.05
-    max_h_level = 8
+    max_h_level = ${my_number_adaptivity}
   [../]
 []
 

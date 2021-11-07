@@ -4,29 +4,29 @@
 #  hcp
 
 my_GBmob0 = 2.5e-6
-my_length_scale = 1.0e-9
-my_time_scale = 1.0e-9 # miu s
-my_wGB = 15 # nm
+my_length_scale = 1.0e-6
+my_time_scale = 1.0e-6 # miu s
+my_wGB = 8 # 8 # μm
 my_T = 500
-my_filename = 'GG_bicrystal_circular_2_results'
-my_number_adaptivity = 8
-my_displacement = 0 # 25.0e2 # 10 10 2% 500*5%
+my_filename = 'elastic02_miu_GBMobility_test'
+my_displacement = 10 # 10 10 2% 500*5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
-my_end_time = 40000
+my_end_time = 4000
 # my_interval = 2 
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 32
-  ny = 32
+  nx = 50
+  ny = 50
+  nz = 0
   xmin = 0
-  xmax = 64e3
+  xmax = 500
   ymin = 0
-  ymax = 64e3
+  ymax = 500
+  zmin = 0
+  zmax = 0
   elem_type = QUAD4
-  
-  parallel_type = distributed
 []
 
 [GlobalParams]
@@ -48,42 +48,6 @@ my_end_time = 40000
     # scaling = 1.0e4 #Scales residual to improve convergence 
   [../]
 []
-
-[Bounds]
-  [./gr0_upper_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr0
-    bound_type = upper
-    bound_value = 1.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr0_lower_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr0
-    bound_type = lower
-    bound_value = 0.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr1_upper_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr1
-    bound_type = upper
-    bound_value = 1.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr1_lower_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr1
-    bound_type = lower
-    bound_value = 0.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-[]
-
 
 [UserObjects]
   [./euler_angle_file]
@@ -108,27 +72,23 @@ my_end_time = 40000
 [ICs]
   [./PolycrystalICs]
     [./BicrystalCircleGrainIC]
-      radius = 20e3
-      x = 32e3
-      y = 32e3
-      int_width = 15
+      radius = 200
+      x = 250
+      y = 250
+      int_width = 10
     [../]
   [../]
 []
 
 [AuxVariables]
-  [./bounds_dummy]
-    order = FIRST
-    family = LAGRANGE
-  [../]
   [./bnds]
     order = FIRST
     family = LAGRANGE
   [../]
-#   [./total_energy_density]
-#     order = CONSTANT
-#     family = MONOMIAL
-#   [../]
+  [./total_energy_density]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./elastic_strain11]
     order = CONSTANT
     family = MONOMIAL
@@ -153,14 +113,14 @@ my_end_time = 40000
     order = CONSTANT
     family = MONOMIAL
   [../]
-#   [./unique_grains]
-#     order = CONSTANT
-#     family = MONOMIAL
-#   [../]
-#   [./var_indices]
-#     order = CONSTANT
-#     family = MONOMIAL
-#   [../]
+  [./unique_grains]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./var_indices]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./vonmises_stress]
     order = CONSTANT
     family = MONOMIAL
@@ -192,13 +152,13 @@ my_end_time = 40000
     variable = bnds
     execute_on = timestep_end
   [../]
-#   [./local_free_energy]
-#     type = TotalFreeEnergy
-#     f_name = f_chem
-#     variable = total_energy_density
-#     kappa_names = 'kappa_op kappa_op'
-#     interfacial_vars = 'gr0 gr1'
-#   [../]
+  [./local_free_energy]
+    type = TotalFreeEnergy
+    f_name = f_chem
+    variable = total_energy_density
+    kappa_names = 'kappa_op kappa_op'
+    interfacial_vars = 'gr0 gr1'
+  [../]
   [./elastic_strain11]
     type = RankTwoAux
     variable = elastic_strain11
@@ -244,20 +204,20 @@ my_end_time = 40000
     index_i = 1
     index_j = 1
   [../]
-#   [./unique_grains]
-#     type = FeatureFloodCountAux
-#     variable = unique_grains
-#     execute_on = timestep_end
-#     flood_counter = grain_tracker
-#     field_display = UNIQUE_REGION
-#   [../]
-#   [./var_indices]
-#     type = FeatureFloodCountAux
-#     variable = var_indices
-#     execute_on = timestep_end
-#     flood_counter = grain_tracker
-#     field_display = VARIABLE_COLORING
-#   [../]
+  [./unique_grains]
+    type = FeatureFloodCountAux
+    variable = unique_grains
+    execute_on = timestep_end
+    flood_counter = grain_tracker
+    field_display = UNIQUE_REGION
+  [../]
+  [./var_indices]
+    type = FeatureFloodCountAux
+    variable = var_indices
+    execute_on = timestep_end
+    flood_counter = grain_tracker
+    field_display = VARIABLE_COLORING
+  [../]
   [./C1111]
     type = RankFourAux
     variable = C1111
@@ -298,6 +258,7 @@ my_end_time = 40000
     variable = disp_y
     boundary = top
     value = ${my_displacement} # 500
+    # value = 0
   [../]
   [./x_anchor]
     type = DirichletBC
@@ -331,7 +292,7 @@ my_end_time = 40000
     type = ComputePolycrystalElasticityTensor
     grain_tracker = grain_tracker
     length_scale = ${my_length_scale}
-    # time_scale = ${my_time_scale}
+    time_scale = ${my_time_scale}
     # outputs = my_exodus
   [../]
   [./strain]
@@ -348,33 +309,33 @@ my_end_time = 40000
   #   args = 'gr1 gr0'
 	#   outputs = my_exodus
   # [../]
-#   [./local_free_energy]
-#     type = DerivativeParsedMaterial
-#     f_name= f_chem
-#     args = 'gr0 gr1'
-#     material_property_names = 'mu gamma_asymm'
-#     function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2+1.0/4.0)'
-#     derivative_order = 2
-#     enable_jit = true
-#     outputs = my_exodus
-#     output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1'
-#   [../]
-#   [./elastic_free_energy]
-#     type = ElasticEnergyMaterial
-#     f_name = f_elastic
-#     block = 0
-#     args = 'gr0 gr1'
-#     outputs = my_exodus
-#     output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
-#   [../]
+  [./local_free_energy]
+    type = DerivativeParsedMaterial
+    f_name= f_chem
+    args = 'gr0 gr1'
+    material_property_names = 'mu gamma_asymm'
+    function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2+1.0/4.0)'
+    derivative_order = 2
+    enable_jit = true
+    outputs = my_exodus
+    output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1'
+  [../]
+  [./elastic_free_energy]
+    type = ElasticEnergyMaterial
+    f_name = f_elastic
+    block = 0
+    args = 'gr0 gr1'
+    outputs = my_exodus
+    output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
+  [../]
 []
 
 [Postprocessors]
-#   [./ngrains]
-#     type = FeatureFloodCount
-#     variable = bnds
-#     threshold = 0.7
-#   [../]
+  [./ngrains]
+    type = FeatureFloodCount
+    variable = bnds
+    threshold = 0.7
+  [../]
   [./dofs]
     type = NumDOFs
   [../]
@@ -401,9 +362,9 @@ my_end_time = 40000
   # [../]
 []
 
-# [Debug]
-#   show_var_residual_norms = true
-# []
+[Debug]
+  show_var_residual_norms = true
+[]
 
 [Preconditioning]
   [./SMP]
@@ -423,9 +384,9 @@ my_end_time = 40000
   nl_max_its = 25
   nl_rel_tol = 1.0e-7
 
-#   automatic_scaling = true # to improve the convergence of linear solves
+  automatic_scaling = true # to improve the convergence of linear solves
   start_time = 0.0
-  end_time = ${my_end_time}
+  end_time = 4000
 
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -435,11 +396,10 @@ my_end_time = 40000
     optimal_iterations = 8
   [../]
   [./Adaptivity]
-    initial_adaptivity = ${my_number_adaptivity} # 8 
-    cycles_per_step = 2 # The number of adaptivity cycles per step
-    refine_fraction = 0.5 # The fraction of elements or error to refine.
+    initial_adaptivity = 2
+    refine_fraction = 0.8
     coarsen_fraction = 0.05
-    max_h_level = 8
+    max_h_level = 3
   [../]
 []
 
@@ -447,20 +407,20 @@ my_end_time = 40000
   file_base = ./${my_filename}/out_${my_filename}
   # exodus = true
   csv = true
-  [./my_checkpoint]
-    type = Checkpoint
-    num_files = 6
-    interval = 2
-  [../]
+  # [./my_checkpoint]
+  #   type = Checkpoint
+  #   num_files = 6
+  #   interval = 5
+  # [../]
   [./my_exodus]
-    type = Nemesis
+    type = Exodus
     # interval = ${my_interval} # The interval at which time steps are output
     # sync_times = '10 50 100 500 1000 5000 10000 50000 100000'
     # sync_only = true
   [../]
   [./pgraph]
     type = PerfGraphOutput
-    execute_on = 'initial timestep_end final'  # Default is "final"
+    execute_on = 'initial final'  # Default is "final"
     level = 2                     # Default is 1
     heaviest_branch = true        # Default is false
     heaviest_sections = 7         # Default is 0

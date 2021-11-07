@@ -5,7 +5,7 @@
 # stress_xx = -3, stress_yy = -2 = stress_zz
 # (note that stress_xx - stress_yy = stress_xx - stress_zz = -1, so sqrt(3*j2) = 1,
 #  and that the mean stress remains = -7/3)
-
+# /home/pw-moose/projects/panda/example/j2_plasticity/.i
 [Mesh]
   type = GeneratedMesh
   dim = 3

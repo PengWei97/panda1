@@ -2,30 +2,34 @@
 #  1000*600,gr0 gr1 gr2
 #  add Stress component
 #  hcp
+#  mpiexec -n 32 ~/projects/panda/panda-opt -i GG_bicrystal_circular_1_nm_marker.i > GG_bicrystal_circular_1_nm_marker5.log
 
 my_GBmob0 = 2.5e-6
 my_length_scale = 1.0e-9
 my_time_scale = 1.0e-9 # miu s
 my_wGB = 15 # nm
 my_T = 500
-my_filename = 'GG_bicrystal_circular_2_results'
-my_number_adaptivity = 8
-my_displacement = 0 # 25.0e2 # 10 10 2% 500*5%
+my_filename = 'GG_bicrystal_circular_1_nm_marker5_results'
+my_number_adaptivity = 5
+my_displacement = 0 #25.0e2 # 10 10 2% 500*5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
-my_end_time = 40000
+my_end_time = 4000
 # my_interval = 2 
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 32
-  ny = 32
+  nx = 64
+  ny = 64
+  nz = 0
   xmin = 0
-  xmax = 64e3
+  xmax = 64e1
   ymin = 0
-  ymax = 64e3
+  ymax = 64e1
+  zmin = 0
+  zmax = 0
   elem_type = QUAD4
-  
+
   parallel_type = distributed
 []
 
@@ -49,40 +53,40 @@ my_end_time = 40000
   [../]
 []
 
-[Bounds]
-  [./gr0_upper_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr0
-    bound_type = upper
-    bound_value = 1.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr0_lower_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr0
-    bound_type = lower
-    bound_value = 0.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr1_upper_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr1
-    bound_type = upper
-    bound_value = 1.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr1_lower_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr1
-    bound_type = lower
-    bound_value = 0.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-[]
+# [Bounds]
+#   [./gr0_upper_bound]
+#     type = ConstantBoundsAux
+#     variable = bounds_dummy
+#     bounded_variable = gr0
+#     bound_type = upper
+#     bound_value = 1.0
+#     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
+#   [../]
+#   [./gr0_lower_bound]
+#     type = ConstantBoundsAux
+#     variable = bounds_dummy
+#     bounded_variable = gr0
+#     bound_type = lower
+#     bound_value = 0.0
+#     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
+#   [../]
+#   [./gr1_upper_bound]
+#     type = ConstantBoundsAux
+#     variable = bounds_dummy
+#     bounded_variable = gr1
+#     bound_type = upper
+#     bound_value = 1.0
+#     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
+#   [../]
+#   [./gr1_lower_bound]
+#     type = ConstantBoundsAux
+#     variable = bounds_dummy
+#     bounded_variable = gr1
+#     bound_type = lower
+#     bound_value = 0.0
+#     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
+#   [../]
+# []
 
 
 [UserObjects]
@@ -108,19 +112,19 @@ my_end_time = 40000
 [ICs]
   [./PolycrystalICs]
     [./BicrystalCircleGrainIC]
-      radius = 20e3
-      x = 32e3
-      y = 32e3
+      radius = 25e1
+      x = 32e1
+      y = 32e1
       int_width = 15
     [../]
   [../]
 []
 
 [AuxVariables]
-  [./bounds_dummy]
-    order = FIRST
-    family = LAGRANGE
-  [../]
+  # [./bounds_dummy]
+  #   order = FIRST
+  #   family = LAGRANGE
+  # [../]
   [./bnds]
     order = FIRST
     family = LAGRANGE
@@ -190,7 +194,8 @@ my_end_time = 40000
   [./BndsCalc]
     type = BndsCalcAux
     variable = bnds
-    execute_on = timestep_end
+    # execute_on = timestep_end
+    v = 'gr0 gr1'
   [../]
 #   [./local_free_energy]
 #     type = TotalFreeEnergy
@@ -434,14 +439,46 @@ my_end_time = 40000
     cutback_factor = 0.8
     optimal_iterations = 8
   [../]
-  [./Adaptivity]
-    initial_adaptivity = ${my_number_adaptivity} # 8 
-    cycles_per_step = 2 # The number of adaptivity cycles per step
-    refine_fraction = 0.5 # The fraction of elements or error to refine.
-    coarsen_fraction = 0.05
-    max_h_level = 8
-  [../]
+  # [./Adaptivity]
+  #   initial_adaptivity = ${my_number_adaptivity} # 8 
+  #   cycles_per_step = 2 # The number of adaptivity cycles per step
+  #   refine_fraction = 0.5 # The fraction of elements or error to refine.
+  #   coarsen_fraction = 0.05
+  #   max_h_level = 8
+  # [../]
 []
+
+[Adaptivity]
+ initial_steps = ${my_number_adaptivity}
+ max_h_level = ${my_number_adaptivity}
+ initial_marker = err_eta
+ marker = err_bnds
+[./Markers]
+   [./err_eta]
+     type = ErrorFractionMarker
+     coarsen = 0.3
+     refine = 0.5
+     indicator = ind_eta
+   [../]
+   [./err_bnds]
+     type = ErrorFractionMarker
+     coarsen = 0.3
+     refine = 0.5
+     indicator = ind_bnds
+   [../]
+ [../]
+ [./Indicators]
+   [./ind_eta]
+     type = GradientJumpIndicator
+     variable = gr0
+    [../]
+    [./ind_bnds]
+      type = GradientJumpIndicator
+      variable = bnds
+   [../]
+ [../]
+[]
+
 
 [Outputs]
   file_base = ./${my_filename}/out_${my_filename}

@@ -6,28 +6,28 @@
 my_GBmob0 = 2.5e-6
 my_length_scale = 1.0e-9
 my_time_scale = 1.0e-6 # miu s
-my_wGB = 50 # nm
+my_wGB = 30 # nm
 my_T = 500
 my_filename = 'GG_bicrystal_box_results'
-my_displacement = 20 # 10 10 2% 500*5%
+my_displacement = 3.2 # 10 10 2% 500*5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
-my_end_time = 4000
+my_end_time = 2000
 # my_interval = 2 
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 10
-  ny = 3
+  nx = 64
+  ny = 32
   nz = 0
   xmin = 0
-  xmax = 1000
+  xmax = 640
   ymin = 0
-  ymax = 1000
+  ymax = 320
   zmin = 0
   zmax = 0
   elem_type = QUAD4
-  uniform_refine = 2
+  uniform_refine = 0
 []
 
 [GlobalParams]
@@ -75,8 +75,8 @@ my_end_time = 4000
     [./BicrystalBoundingBoxIC]
       x1 = 0
       y1 = 0
-      x2 = 500
-      y2 = 1000
+      x2 = 320
+      y2 = 640
     [../]
   [../]
 []
@@ -252,12 +252,12 @@ my_end_time = 4000
 []
 
 [BCs]
-  [./Periodic]
-    [./All]
-      auto_direction = 'x'
-      variable = 'gr0 gr1'
-    [../]
-  [../]
+  # [./Periodic]
+  #   [./All]
+  #     auto_direction = 'x'
+  #     variable = 'gr0 gr1'
+  #   [../]
+  # [../]
   [./top_displacement]
     type = DirichletBC
     variable = disp_y
@@ -390,7 +390,7 @@ my_end_time = 4000
 
   automatic_scaling = true # to improve the convergence of linear solves
   start_time = 0.0
-  end_time = 4000
+  end_time = ${my_end_time}
 
   [./TimeStepper]
     type = IterationAdaptiveDT

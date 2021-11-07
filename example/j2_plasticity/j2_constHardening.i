@@ -1,3 +1,13 @@
+# UserObject J2 test, with hardening, but with rate=0, 
+# apply uniform compression in x direction to give
+# trial stress_xx = -5, so sqrt(3*J2) = 5
+# with zero Poisson's ratio, this should return to
+# stress_xx = -3, stress_yy = -1 = stress_zz,
+# for strength = 2
+# (note that stress_xx - stress_yy = stress_xx - stress_zz = -2, so sqrt(3*j2) = 2,
+#  and that the mean stress remains = -5/3)
+# is prefectly hardening
+
 [Mesh]
   displacements = 'x_disp y_disp z_disp'
   [generated_mesh]
@@ -28,6 +38,7 @@
   []
 []
 
+
 [Variables]
   [./x_disp]
     order = FIRST
@@ -47,42 +58,6 @@
   [./TensorMechanics]
     displacements = 'x_disp y_disp z_disp'
     use_displaced_mesh = true
-  [../]
-[]
-
-[Materials]
-  [./fplastic]
-    type = FiniteStrainPlasticMaterial # 设置屈服函数
-    # implements rate-independent associative J2 plasticity 
-    # with isotropic hardening in the finite-strain framework.
-    block=0
-    yield_stress='0. 445. 0.05 610. 0.1 680. 0.38 810. 0.95 920. 2. 950.'
-    # equivalent plastic strain = \int_{0}^{t} \sqrt{\frac{2}{3} \dot{\varepsilon}^{p}: \dot{\varepsilon}^{p}} \mathrm{~d} t
-    # Yield function = sqrt(3*s_ij*s_ij/2) - K(equivalent plastic strain)
-    # s_ij = stress_ij - delta_ij*trace(stress)/3
-    # K is the yield stress, specified as a piecewise-linear function by the user.
-    # This is a piecewise linear function entered by the user in the yield_stress vector
-    # declareProperty
-      # plastic_strain
-      # eqv_plastic_strain
-    # getMaterialProperty(old)
-      # plastic_strain
-      # eqv_plastic_strain
-      # stress
-      # strain_increment
-      # rotation_increment
-      # elasticity_tensor
-  [../]
-  [./elasticity_tensor]
-    type = ComputeElasticityTensor
-    block = 0
-    C_ijkl = '2.827e5 1.21e5 1.21e5 2.827e5 1.21e5 2.827e5 0.808e5 0.808e5 0.808e5'
-    fill_method = symmetric9
-  [../]
-  [./strain]
-    type = ComputeFiniteStrain
-    block = 0
-    displacements = 'x_disp y_disp z_disp'
   [../]
 []
 
@@ -139,7 +114,12 @@
 []
 
 [AuxVariables]
+#  active = ' '
   [./stress_zz]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./f]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -147,25 +127,18 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./peeq]
+  [./plastic_strain_zz]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./pe11]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./pe22]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./pe33]
+  [./iter]
     order = CONSTANT
     family = MONOMIAL
   [../]
 []
 
 [AuxKernels]
+#  active = ' '
   [./stress_zz]
     type = RankTwoAux
     rank_two_tensor = stress
@@ -180,31 +153,87 @@
     index_i = 2
     index_j = 2
   [../]
-  [./pe11]
+  [./plastic_strain_zz]
     type = RankTwoAux
     rank_two_tensor = plastic_strain
-    variable = pe11
-    index_i = 0
-    index_j = 0
-  [../]
-    [./pe22]
-    type = RankTwoAux
-    rank_two_tensor = plastic_strain
-    variable = pe22
-    index_i = 1
-    index_j = 1
-  [../]
-  [./pe33]
-    type = RankTwoAux
-    rank_two_tensor = plastic_strain
-    variable = pe33
+    variable = plastic_strain_zz
     index_i = 2
     index_j = 2
   [../]
-  [./eqv_plastic_strain]
+  [./f]
+    type = MaterialStdVectorAux
+    index = 0
+    property = plastic_yield_function
+    variable = f
+  [../]
+  [./iter]
     type = MaterialRealAux
-    property = eqv_plastic_strain
-    variable = peeq
+    property = plastic_NR_iterations
+    variable = iter
+  [../]
+[]
+
+[Postprocessors]
+  # active = ' '
+  [./total_stress_zz]
+    type = ElementAverageValue
+    variable = stress_zz
+  [../]
+  [./total_strain_zz]
+    type = ElementAverageValue
+    variable = strain_zz
+  [../]
+  [./f]
+    type = ElementAverageValue
+    variable = f
+  [../]
+  [./iter]
+    type = PointValue
+    point = '0 0 0'
+    variable = iter
+  [../]
+[]
+
+[UserObjects]
+  [./str]
+    type = TensorMechanicsHardeningConstant
+    value = 4e5
+  [../]
+  [./j2]
+    type = TensorMechanicsPlasticJ2
+    yield_strength = str
+    yield_function_tolerance = 1E-5
+    internal_constraint_tolerance = 1E-9
+  [../]
+[]
+
+[Materials]
+  [./elasticity_tensor]
+    type = ComputeElasticityTensor
+    block = 0
+    fill_method = symmetric_isotropic
+    C_ijkl = '0 1E6'
+    # elasticity_tensor_ijkl, effective_stiffness
+  [../]
+  [./strain]
+    type = ComputeFiniteStrain
+    block = 0
+    displacements = 'x_disp y_disp z_disp' 
+    # deformation_gradient_ij, mechanical_strain_ij
+    # rotation_increment_ij, strain_increment_ij
+    # total_strain_ij.strain_rate_ij
+  [../]
+  [./mc]
+    type = ComputeMultiPlasticityStress
+    block = 0
+    ep_plastic_tolerance = 1E-9
+    plastic_models = j2
+    debug_fspb = crash
+    # outputs = exodus
+    # Jacobian_mult_ijkl, elastic_strain_ij,
+    # plastic_NR_iterations
+    # plastic_strain_ij
+    # stress_ij
   [../]
 []
 
@@ -218,31 +247,19 @@
 [Executioner]
   type = Transient
 
-  dt=0.1
-  dtmax=1
-  dtmin=0.1
-  end_time=2.0
+  dt=0.01
+  # dtmax=1
+  dtmin=0.01
+  end_time=2
 
   nl_abs_tol = 1e-10
 []
 
-[Postprocessors]
-  [./total_stress_zz]
-    type = ElementAverageValue
-    variable = stress_zz
-  [../]
-  [./total_strain_zz]
-    type = ElementAverageValue
-    variable = strain_zz
-  [../]
-  [./Equivalent_plastic_strain]
-    type = ElementAverageValue
-    variable = peeq
-  [../]
-[]
 
 [Outputs]
-  file_base = ./tensor_mechanics_j2plasticity/out
+  file_base = ./j2_constHardening/j2_const6_out
   exodus = true
-  csv = true
+  [./csv]
+    type = CSV
+  [../]
 []

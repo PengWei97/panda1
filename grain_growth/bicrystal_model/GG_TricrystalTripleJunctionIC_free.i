@@ -3,7 +3,7 @@ my_length_scale = 1.0e-9
 my_time_scale = 1.0e-9 # miu s
 my_wGB = 15 # nm
 my_T = 500
-my_filename = 'GG_TricrystalTripleJunctionIC_results'
+my_filename = 'GG_TricrystalTripleJunctionIC_free_results'
 my_displacement = 0 # 10 10 2% 500*5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
 my_end_time = 4000
@@ -25,7 +25,7 @@ my_end_time = 4000
 []
 
 [GlobalParams]
-  op_num = 2
+  op_num = 3
   var_name_base = gr
   v = 'gr0 gr1 gr2' # Names of the grains
   theta1 = 135 # Angle the first grain makes at the triple junction
@@ -86,17 +86,6 @@ my_end_time = 4000
     
     fill_method = symmetric9
     euler_angle_provider = euler_angle_file
-  [../]
-[]
-
-[ICs]
-  [./PolycrystalICs]
-    [./BicrystalCircleGrainIC]
-      radius = 400
-      x = 500
-      y = 500
-      int_width = 15
-    [../]
   [../]
 []
 
@@ -176,8 +165,8 @@ my_end_time = 4000
     type = TotalFreeEnergy
     f_name = f_chem
     variable = total_energy_density
-    kappa_names = 'kappa_op kappa_op'
-    interfacial_vars = 'gr0 gr1'
+    kappa_names = 'kappa_op kappa_op kappa_op'
+    interfacial_vars = 'gr0 gr1 gr2'
   [../]
   [./elastic_strain11]
     type = RankTwoAux
@@ -267,12 +256,12 @@ my_end_time = 4000
 []
 
 [BCs]
-  [./Periodic]
-    [./All]
-      auto_direction = 'x'
-      variable = 'gr0 gr1'
-    [../]
-  [../]
+  # [./Periodic]
+  #   [./All]
+  #     auto_direction = 'x'
+  #     variable = 'gr0 gr1 gr2'
+  #   [../]
+  # [../]
   [./top_displacement]
     type = DirichletBC
     variable = disp_y
@@ -331,21 +320,21 @@ my_end_time = 4000
   [./local_free_energy]
     type = DerivativeParsedMaterial
     f_name= f_chem
-    args = 'gr0 gr1'
+    args = 'gr0 gr1 gr2'
     material_property_names = 'mu gamma_asymm'
-    function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2+1.0/4.0)'
+    function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gr2^4/4.0 - gr2^2/2.0 + gamma_asymm*gr0^2*gr1^2+gamma_asymm*gr0^2*gr2^2+gamma_asymm*gr1^2*gr2^2+1.0/4.0)'
     derivative_order = 2
     enable_jit = true
     outputs = my_exodus
-    output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1'
+    output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1 df_chem/dgr2'
   [../]
   [./elastic_free_energy]
     type = ElasticEnergyMaterial
     f_name = f_elastic
     block = 0
-    args = 'gr0 gr1'
+    args = 'gr0 gr1 gr2'
     outputs = my_exodus
-    output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
+    output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1 df_elastic/dgr2'
   [../]
 []
 

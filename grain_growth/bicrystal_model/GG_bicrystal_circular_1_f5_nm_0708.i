@@ -2,30 +2,37 @@
 #  1000*600,gr0 gr1 gr2
 #  add Stress component
 #  hcp
+# mpiexec -n 32 ~/projects/panda/panda-opt -i GG_bicrystal_circular_1_f5_nm_0708.i > GG_bicrystal_circular_1_f5_nm_0708.log
+# tar -cvf - out_GG_bicrystal_circular_1_f5_nm_Noadaptivity_results.e* | pigz -9 -p 10 > out_GG_bicrystal_circular_1_f5_nm_Noadaptivity_results.tgz
+# code GG_bicrystal_circular_1_f5_nm_0708.i
 
 my_GBmob0 = 2.5e-6
 my_length_scale = 1.0e-9
 my_time_scale = 1.0e-9 # miu s
 my_wGB = 15 # nm
+my_GBenergy = 0.0708
 my_T = 500
-my_filename = 'GG_bicrystal_circular_2_results'
-my_number_adaptivity = 8
-my_displacement = 0 # 25.0e2 # 10 10 2% 500*5%
+my_filename = 'GG_bicrystal_circular_1_f5_nm_0708'
+my_number_adaptivity = 3
+my_displacement = 32 #25.0e2 # 10 10 2% 500*5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
-my_end_time = 40000
+my_end_time = 4000
 # my_interval = 2 
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 32
-  ny = 32
+  nx = 256
+  ny = 256 
+  nz = 0
   xmin = 0
-  xmax = 64e3
+  xmax = 64e1
   ymin = 0
-  ymax = 64e3
+  ymax = 64e1
+  zmin = 0
+  zmax = 0
   elem_type = QUAD4
-  
+
   parallel_type = distributed
 []
 
@@ -108,9 +115,9 @@ my_end_time = 40000
 [ICs]
   [./PolycrystalICs]
     [./BicrystalCircleGrainIC]
-      radius = 20e3
-      x = 32e3
-      y = 32e3
+      radius = 25e1
+      x = 32e1
+      y = 32e1
       int_width = 15
     [../]
   [../]
@@ -125,10 +132,10 @@ my_end_time = 40000
     order = FIRST
     family = LAGRANGE
   [../]
-#   [./total_energy_density]
-#     order = CONSTANT
-#     family = MONOMIAL
-#   [../]
+  [./total_energy_density]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./elastic_strain11]
     order = CONSTANT
     family = MONOMIAL
@@ -192,13 +199,13 @@ my_end_time = 40000
     variable = bnds
     execute_on = timestep_end
   [../]
-#   [./local_free_energy]
-#     type = TotalFreeEnergy
-#     f_name = f_chem
-#     variable = total_energy_density
-#     kappa_names = 'kappa_op kappa_op'
-#     interfacial_vars = 'gr0 gr1'
-#   [../]
+  [./local_free_energy]
+    type = TotalFreeEnergy
+    f_name = f_chem
+    variable = total_energy_density
+    kappa_names = 'kappa_op kappa_op'
+    interfacial_vars = 'gr0 gr1'
+  [../]
   [./elastic_strain11]
     type = RankTwoAux
     variable = elastic_strain11
@@ -321,7 +328,7 @@ my_end_time = 40000
     wGB = ${my_wGB} # nm
     GBmob0 = ${my_GBmob0} # m^4/(Js) from Schoenfelder 1997
     Q = 0.23 # Migration energy in eV
-    GBenergy = 0.708 # GB energy in J/m^2
+    GBenergy = ${my_GBenergy} # GB energy in J/m^2
     time_scale = ${my_time_scale}
     length_scale = ${my_length_scale}
     # GBMobility = ${my_GBMobility}
@@ -348,25 +355,25 @@ my_end_time = 40000
   #   args = 'gr1 gr0'
 	#   outputs = my_exodus
   # [../]
-#   [./local_free_energy]
-#     type = DerivativeParsedMaterial
-#     f_name= f_chem
-#     args = 'gr0 gr1'
-#     material_property_names = 'mu gamma_asymm'
-#     function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2+1.0/4.0)'
-#     derivative_order = 2
-#     enable_jit = true
-#     outputs = my_exodus
-#     output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1'
-#   [../]
-#   [./elastic_free_energy]
-#     type = ElasticEnergyMaterial
-#     f_name = f_elastic
-#     block = 0
-#     args = 'gr0 gr1'
-#     outputs = my_exodus
-#     output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
-#   [../]
+  [./local_free_energy]
+    type = DerivativeParsedMaterial
+    f_name= f_chem
+    args = 'gr0 gr1'
+    material_property_names = 'mu gamma_asymm'
+    function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2+1.0/4.0)'
+    derivative_order = 2
+    enable_jit = true
+    outputs = my_exodus
+    output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1'
+  [../]
+  [./elastic_free_energy]
+    type = ElasticEnergyMaterial
+    f_name = f_elastic
+    block = 0
+    args = 'gr0 gr1'
+    outputs = my_exodus
+    output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
+  [../]
 []
 
 [Postprocessors]
@@ -437,9 +444,9 @@ my_end_time = 40000
   [./Adaptivity]
     initial_adaptivity = ${my_number_adaptivity} # 8 
     cycles_per_step = 2 # The number of adaptivity cycles per step
-    refine_fraction = 0.5 # The fraction of elements or error to refine.
+    refine_fraction = 0.8 # The fraction of elements or error to refine.
     coarsen_fraction = 0.05
-    max_h_level = 8
+    max_h_level = ${my_number_adaptivity}
   [../]
 []
 

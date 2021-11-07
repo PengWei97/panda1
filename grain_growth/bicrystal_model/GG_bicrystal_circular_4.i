@@ -8,9 +8,9 @@ my_length_scale = 1.0e-9
 my_time_scale = 1.0e-9 # miu s
 my_wGB = 15 # nm
 my_T = 500
-my_filename = 'GG_bicrystal_circular_2_results'
-my_number_adaptivity = 8
-my_displacement = 0 # 25.0e2 # 10 10 2% 500*5%
+my_filename = 'GG_bicrystal_circular_5_results'
+my_number_adaptivity = 7
+my_displacement = 0 #25.0e2 # 10 10 2% 500*5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
 my_end_time = 40000
 # my_interval = 2 
@@ -18,15 +18,13 @@ my_end_time = 40000
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 32
-  ny = 32
+  nx = 25
+  ny = 25
   xmin = 0
-  xmax = 64e3
+  xmax = 50.0e3
   ymin = 0
-  ymax = 64e3
+  ymax = 50.0e3
   elem_type = QUAD4
-  
-  parallel_type = distributed
 []
 
 [GlobalParams]
@@ -46,6 +44,13 @@ my_end_time = 40000
     order = FIRST
     family = LAGRANGE
     # scaling = 1.0e4 #Scales residual to improve convergence 
+  [../]
+[]
+
+[AuxVariables]
+  [./bounds_dummy]
+    order = FIRST
+    family = LAGRANGE
   [../]
 []
 
@@ -108,19 +113,15 @@ my_end_time = 40000
 [ICs]
   [./PolycrystalICs]
     [./BicrystalCircleGrainIC]
-      radius = 20e3
-      x = 32e3
-      y = 32e3
+      radius = 200.0e2
+      x = 250e2
+      y = 250e2
       int_width = 15
     [../]
   [../]
 []
 
 [AuxVariables]
-  [./bounds_dummy]
-    order = FIRST
-    family = LAGRANGE
-  [../]
   [./bnds]
     order = FIRST
     family = LAGRANGE
@@ -435,11 +436,11 @@ my_end_time = 40000
     optimal_iterations = 8
   [../]
   [./Adaptivity]
-    initial_adaptivity = ${my_number_adaptivity} # 8 
+    initial_adaptivity = ${my_number_adaptivity}
     cycles_per_step = 2 # The number of adaptivity cycles per step
     refine_fraction = 0.5 # The fraction of elements or error to refine.
     coarsen_fraction = 0.05
-    max_h_level = 8
+    max_h_level = 10
   [../]
 []
 
@@ -453,7 +454,7 @@ my_end_time = 40000
     interval = 2
   [../]
   [./my_exodus]
-    type = Nemesis
+    type = Exodus
     # interval = ${my_interval} # The interval at which time steps are output
     # sync_times = '10 50 100 500 1000 5000 10000 50000 100000'
     # sync_only = true

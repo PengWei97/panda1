@@ -8,11 +8,11 @@ my_length_scale = 1.0e-9
 my_time_scale = 1.0e-9 # miu s
 my_wGB = 15 # nm
 my_T = 500
-my_filename = 'GG_bicrystal_circular_2_results'
+my_filename = 'GG_bicrystal_circular_2_f5_results'
 my_number_adaptivity = 8
-my_displacement = 0 # 25.0e2 # 10 10 2% 500*5%
+my_displacement = 3.2e3 # 25.0e2 # 10 10 2% 500*5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
-my_end_time = 40000
+my_end_time = 40000000
 # my_interval = 2 
 
 [Mesh]
@@ -49,40 +49,40 @@ my_end_time = 40000
   [../]
 []
 
-[Bounds]
-  [./gr0_upper_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr0
-    bound_type = upper
-    bound_value = 1.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr0_lower_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr0
-    bound_type = lower
-    bound_value = 0.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr1_upper_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr1
-    bound_type = upper
-    bound_value = 1.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr1_lower_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr1
-    bound_type = lower
-    bound_value = 0.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-[]
+# [Bounds]
+#   [./gr0_upper_bound]
+#     type = ConstantBoundsAux
+#     variable = bounds_dummy
+#     bounded_variable = gr0
+#     bound_type = upper
+#     bound_value = 1.0
+#     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
+#   [../]
+#   [./gr0_lower_bound]
+#     type = ConstantBoundsAux
+#     variable = bounds_dummy
+#     bounded_variable = gr0
+#     bound_type = lower
+#     bound_value = 0.0
+#     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
+#   [../]
+#   [./gr1_upper_bound]
+#     type = ConstantBoundsAux
+#     variable = bounds_dummy
+#     bounded_variable = gr1
+#     bound_type = upper
+#     bound_value = 1.0
+#     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
+#   [../]
+#   [./gr1_lower_bound]
+#     type = ConstantBoundsAux
+#     variable = bounds_dummy
+#     bounded_variable = gr1
+#     bound_type = lower
+#     bound_value = 0.0
+#     execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
+#   [../]
+# []
 
 
 [UserObjects]
@@ -125,10 +125,14 @@ my_end_time = 40000
     order = FIRST
     family = LAGRANGE
   [../]
-#   [./total_energy_density]
-#     order = CONSTANT
-#     family = MONOMIAL
-#   [../]
+  [./total_energy_density]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./grad_energy_density]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./elastic_strain11]
     order = CONSTANT
     family = MONOMIAL
@@ -192,13 +196,13 @@ my_end_time = 40000
     variable = bnds
     execute_on = timestep_end
   [../]
-#   [./local_free_energy]
-#     type = TotalFreeEnergy
-#     f_name = f_chem
-#     variable = total_energy_density
-#     kappa_names = 'kappa_op kappa_op'
-#     interfacial_vars = 'gr0 gr1'
-#   [../]
+  [./local_free_energy]
+    type = TotalFreeEnergy
+    f_name = f_chem
+    variable = total_energy_density
+    kappa_names = 'kappa_op kappa_op'
+    interfacial_vars = 'gr0 gr1'
+  [../]
   [./elastic_strain11]
     type = RankTwoAux
     variable = elastic_strain11
@@ -325,7 +329,8 @@ my_end_time = 40000
     time_scale = ${my_time_scale}
     length_scale = ${my_length_scale}
     # GBMobility = ${my_GBMobility}
-    # outputs = my_exodus
+    outputs = my_exodus
+    output_properties = 'kappa_op L mu gamma_asymm sigma M_GB l_GB'
   [../]
   [./ElasticityTensor]
     type = ComputePolycrystalElasticityTensor
@@ -348,25 +353,25 @@ my_end_time = 40000
   #   args = 'gr1 gr0'
 	#   outputs = my_exodus
   # [../]
-#   [./local_free_energy]
-#     type = DerivativeParsedMaterial
-#     f_name= f_chem
-#     args = 'gr0 gr1'
-#     material_property_names = 'mu gamma_asymm'
-#     function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2+1.0/4.0)'
-#     derivative_order = 2
-#     enable_jit = true
-#     outputs = my_exodus
-#     output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1'
-#   [../]
-#   [./elastic_free_energy]
-#     type = ElasticEnergyMaterial
-#     f_name = f_elastic
-#     block = 0
-#     args = 'gr0 gr1'
-#     outputs = my_exodus
-#     output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
-#   [../]
+  [./local_free_energy]
+    type = DerivativeParsedMaterial
+    f_name= f_chem
+    args = 'gr0 gr1'
+    material_property_names = 'mu gamma_asymm'
+    function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2+1.0/4.0)'
+    derivative_order = 2
+    enable_jit = true
+    outputs = my_exodus
+    output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1'
+  [../]
+  [./elastic_free_energy]
+    type = ElasticEnergyMaterial
+    f_name = f_elastic
+    block = 0
+    args = 'gr0 gr1'
+    outputs = my_exodus
+    output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
+  [../]
 []
 
 [Postprocessors]
