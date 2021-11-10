@@ -1,17 +1,29 @@
+my_file_name = test14
+# my_function = '100+0.01*sin(t*pi)'
+# my_function = '20*t' # 0.001s^{-1}
+# my_function = 'if(t<9,20*t,180)' # 0.001s^{-1}
+# my_function = 'if(t<9,20*t,180+0.1*sin(t*pi))' # 0.001s^{-1}
+my_function = 'if(t<3,20*t,60+0.02*sin(t*pi))'
+my_end_time = 600
+my_yield_0 = 1000 # MPa
+my_xymax = 2e3
+my_radus = 1e3
+
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 10
-  ny = 3
-  xmax = 1000
-  ymax = 1000
+  nx = 40
+  ny = 12
+  xmax = ${my_xymax}
+  ymax = ${my_xymax}
   elem_type = QUAD4
-  uniform_refine = 2
+  # uniform_refine = 2
 []
 
 [GlobalParams]
   op_num = 2
   var_name_base = gr
+  displacements = 'disp_x disp_y'
 []
 
 [Variables]
@@ -28,8 +40,8 @@
     [./BicrystalBoundingBoxIC]
       x1 = 0
       y1 = 0
-      x2 = 500
-      y2 = 1000
+      x2 = ${my_radus}
+      y2 = ${my_xymax}
     [../]
   [../]
 []
@@ -39,7 +51,7 @@
     order = FIRST
     family = LAGRANGE
   [../]
-  [./elastic_strain11]
+  [./strain_yy]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -47,7 +59,19 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./elastic_strain12]
+  [./stress_yy]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./VMstress]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./f]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./p_internal_parameter]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -63,10 +87,6 @@
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./active_bounds_elemental]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
   [./euler_angle]
     order = CONSTANT
     family = MONOMIAL
@@ -76,10 +96,24 @@
 [Kernels]
   [./PolycrystalKernel]
   [../]
-  [./PolycrystalElasticDrivingForce]
+  [./GGPolycrystalElasticDrivingForce]
+    # ACGrGrElasticDrivingForce
+    # GGPolycrystalElasticDrivingForce
+    op_num = 2
+    var_name_base = gr
+      # GGACGrGrElasticDrivingForce
   [../]
-  [./TensorMechanics]
-    displacements = 'disp_x disp_y'
+  # [./TensorMechanics]
+  #   displacements = 'disp_x disp_y'
+  # [../]
+[]
+
+[Modules/TensorMechanics/Master]
+  [./all]
+    # strain = FINITE
+    # displacements = 'disp_x disp_y'  
+    use_displaced_mesh = true
+    strain = FINITE # FINITE
   [../]
 []
 
@@ -87,14 +121,6 @@
   [./bnds_aux]
     type = BndsCalcAux
     variable = bnds
-    execute_on = timestep_end
-  [../]
-  [./elastic_strain11]
-    type = RankTwoAux
-    variable = elastic_strain11
-    rank_two_tensor = elastic_strain
-    index_i = 0
-    index_j = 0
     execute_on = timestep_end
   [../]
   [./elastic_strain22]
@@ -105,13 +131,36 @@
     index_j = 1
     execute_on = timestep_end
   [../]
-  [./elastic_strain12]
+  [./strain_yy]
     type = RankTwoAux
-    variable = elastic_strain12
-    rank_two_tensor = elastic_strain
-    index_i = 0
+    rank_two_tensor = total_strain
+    variable = strain_yy
+    index_i = 1
     index_j = 1
-    execute_on = timestep_end
+  [../]
+  [./stress_yy]
+    type = RankTwoAux
+    rank_two_tensor = stress
+    variable = stress_yy
+    index_i = 1
+    index_j = 1
+  [../]
+  [./VMstress]
+    type = MaterialRealAux
+    variable = VMstress
+    property = von_mises_stress  
+  [../]
+  [./f]
+    type = MaterialStdVectorAux
+    index = 0
+    property = plastic_yield_function
+    variable = f
+  [../]
+  [./p_internal_parameter]
+    type = MaterialStdVectorAux
+    index = 0
+    property = plastic_internal_parameter
+    variable = p_internal_parameter
   [../]
   [./unique_grains]
     type = FeatureFloodCountAux
@@ -137,13 +186,6 @@
     index_i = 0
     execute_on = timestep_end
   [../]
-  [./active_bounds_elemental]
-    type = FeatureFloodCountAux
-    variable = active_bounds_elemental
-    field_display = ACTIVE_BOUNDS
-    execute_on = 'initial timestep_begin'
-    flood_counter = grain_tracker
-  [../]
   [./euler_angle]
     type = OutputEulerAngles
     variable = euler_angle
@@ -155,11 +197,19 @@
 
 [BCs]
   [./top_displacement]
-    type = DirichletBC
+    type = FunctionDirichletBC
     variable = disp_y
     boundary = top
-    value = -10.0
+    function = ${my_function}
+    use_displaced_mesh = true
+    # function = 50
   [../]
+  # [./top_displacement]
+  #   type = DirichletBC
+  #   variable = disp_y
+  #   boundary = top
+  #   value = 100.0
+  # [../]
   [./x_anchor]
     type = DirichletBC
     variable = disp_x
@@ -186,17 +236,20 @@
     time_scale = 1.0e-6
   [../]
   [./ElasticityTensor]
-    type = ComputePolycrystalElasticityTensor
+    type = GGComputePolycrystalElasticityTensor
     grain_tracker = grain_tracker
   [../]
-  [./strain]
-    type = ComputeSmallStrain
-    block = 0
-    displacements = 'disp_x disp_y'
-  [../]
+  # [./strain]
+  #   type = ComputeFiniteStrain #  ComputeSmallStrain # 
+  #   block = 0
+  #   displacements = 'disp_x disp_y'
+  # [../]
   [./stress]
-    type = ComputeLinearElasticStress
+    type = GGComputeMultiPlasticityStress # ComputeLinearElasticStress # 
     block = 0
+    ep_plastic_tolerance = 1E-9
+    plastic_models = j2
+    debug_fspb = crash
   [../]
 []
 
@@ -214,9 +267,20 @@
 
     euler_angle_provider = euler_angle_file
     fill_method = symmetric9
-    C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
+    C_ijkl = '1.684e5 1.214e5 1.214e5 1.684e5 1.214e5 1.684e5 0.75e5 0.75e5 0.75e5'
 
     outputs = none
+  [../]
+  [./str]
+    type = TensorMechanicsHardeningLinear
+    value_0 = ${my_yield_0} # MPa
+    HardFactor = 200
+  [../]
+  [./j2]
+    type = GGTensorMechanicsPlasticJ2
+    yield_strength = str
+    yield_function_tolerance = 1E-3
+    internal_constraint_tolerance = 1E-9
   [../]
 []
 
@@ -227,6 +291,36 @@
   [./gr0_area]
     type = ElementIntegralVariablePostprocessor
     variable = gr0
+  [../]
+  [./epsilon_yy]
+    type = PointValue
+    point = '0 0 0'
+    variable = strain_yy
+  [../]
+  [./sigma_yy]
+    type = PointValue
+    point = '0 0 0'
+    variable = stress_yy
+  [../]
+  [./VMstress]
+    type = PointValue
+    point = '0 0 0'
+    variable = VMstress
+  [../]
+  [./f]
+    type = PointValue
+    point = '0 0 0'
+    variable = f
+  [../]
+  [./p_internal_parameter]
+    type = PointValue
+    point = '0 0 0'
+    variable = p_internal_parameter
+  [../]
+  [./run_time]
+    type = PerfGraphData
+    section_name = "Root"
+    data_type = total
   [../]
 []
 
@@ -250,14 +344,21 @@
   nl_rel_tol = 1e-9
 
   start_time = 0.0
-  num_steps = 3
-  dt = 0.2
-
+  end_time = ${my_end_time}
+  # # num_steps = 30
+  # dt = 0.2
+  [./TimeStepper]
+    type = IterationAdaptiveDT
+    dt = 0.2
+    growth_factor = 1.2
+    cutback_factor = 0.8
+    optimal_iterations = 8
+  [../]
   [./Adaptivity]
-   initial_adaptivity = 2
+    initial_adaptivity = 5
     refine_fraction = 0.7
     coarsen_fraction = 0.1
-    max_h_level = 2
+    max_h_level = 3
   [../]
 []
 
@@ -265,5 +366,5 @@
   execute_on = 'timestep_end'
   exodus = true
   csv = true
-  file_base = ./wGB75/wGB75_out
+  file_base = ./bcs_test/${my_file_name}
 []

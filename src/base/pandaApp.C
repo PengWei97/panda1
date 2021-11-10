@@ -22,6 +22,12 @@ pandaApp::pandaApp(InputParameters parameters) : MooseApp(parameters)
 
 pandaApp::~pandaApp() {}
 
+// static void
+// associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
+// {
+//   registerSyntax("GGPolycrystalElasticDrivingForceAction", "Kernels/GGPolycrystalElasticDrivingForce");
+// }
+
 void
 pandaApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax)
 {
@@ -37,6 +43,8 @@ pandaApp::registerApps()
 {
   registerApp(pandaApp);
 }
+
+
 
 /***************************************************************************************************
  *********************** Dynamic Library Entry Points - DO NOT MODIFY ******************************

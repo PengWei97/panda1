@@ -195,11 +195,11 @@
 
 [UserObjects]
   [./str]
-    type = TensorMechanicsHardeningConstant
+    type = GGTensorMechanicsHardeningConstant
     value = 2
   [../]
   [./j2]
-    type = TensorMechanicsPlasticJ2
+    type = GGTensorMechanicsPlasticJ2
     yield_strength = str
     yield_function_tolerance = 1E-3
     internal_constraint_tolerance = 1E-9
@@ -219,7 +219,7 @@
     displacements = 'disp_x disp_y disp_z'
   [../]
   [./mc]
-    type = ComputeMultiPlasticityStress
+    type = GGComputeMultiPlasticityStress
     block = 0
     ep_plastic_tolerance = 1E-9
     plastic_models = j2
@@ -229,7 +229,7 @@
 
 
 [Executioner]
-  end_time = 1
+  end_time = 10
   dt = 1
   type = Transient
 []

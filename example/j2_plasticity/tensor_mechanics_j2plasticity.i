@@ -60,8 +60,6 @@
     # equivalent plastic strain = ??
     # Yield function = sqrt(3*s_ij*s_ij/2) - K(equivalent plastic strain)
     # s_ij = stress_ij - delta_ij*trace(stress)/3
-    # K is the yield stress, specified as a piecewise-linear function by the user.
-    # This is a piecewise linear function entered by the user in the yield_stress vector
     # declareProperty
       # plastic_strain
       # eqv_plastic_strain
@@ -71,8 +69,7 @@
       # stress
       # strain_increment
       # rotation_increment
-      # elasticity_tensor
-    
+      # elasticity_tensor    
   [../]
   [./elasticity_tensor]
     type = ComputeElasticityTensor
@@ -177,7 +174,7 @@
     index_i = 0
     index_j = 0
   [../]
-    [./pe22]
+  [./pe22]
     type = RankTwoAux
     rank_two_tensor = plastic_strain
     variable = pe22
@@ -198,6 +195,13 @@
   [../]
 []
 
+[Postprocessors]
+  [./eqv_plastic_strain]
+    type = PointValue
+    point = '0 0 0'
+    variable = peeq
+  [../]
+[]
 [Preconditioning]
   [./SMP]
    type = SMP
@@ -211,13 +215,13 @@
   dt=0.1
   dtmax=1
   dtmin=0.1
-  end_time=1.0
-
-  nl_abs_tol = 1e-10
+  end_time= 2.0
+  nl_abs_to = 1e-10
 []
 
 
 [Outputs]
   file_base = out
   exodus = true
+  csv = true
 []
