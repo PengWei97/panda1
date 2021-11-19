@@ -1,6 +1,6 @@
-N';K;Y=Y'###############################################################################7K
+###############################################################################
 
-L=KB'7UB################## MOOSE Application Standard Makefile #######################W
+################## MOOSE Application Standard Makefile #######################W
 ###############################################################################
 #
 # Optional Environment variables
@@ -17,7 +17,7 @@ endif
 
 # framework
 FRAMEWORK_DIR      := $(MOOSE_DIR)/framework
-\-'
+include $(FRAMEWORK_DIR)/build.mk
 include $(FRAMEWORK_DIR)/moose.mk
 
 ################################## MODULES ####################################
