@@ -1,11 +1,11 @@
 #!/bin/bash
-# mkdir ../include/userobjects
-# mkdir ../src/userobjects
+# mkdir ../include/kernels
+# mkdir ../src/kernels
 
-cp ~/projects/moose/modules/tensor_mechanics/include/userobjects/EulerAngleProvider.h ~/projects/panda/include/userobjects/GGEulerAngleProvider.h
+cp ~/projects/moose/modules/phase_field/include/kernels/ACGrGrElasticDrivingForce.h ~/projects/panda/include/kernels/ACGrGrPlasticDrivingForce.h
 
-cp ~/projects/moose/modules/tensor_mechanics/src/userobjects/EulerAngleProvider.C ~/projects/panda/src/userobjects/GGEulerAngleProvider.C
+cp ~/projects/moose/modules/phase_field/src/kernels/ACGrGrElasticDrivingForce.C ~/projects/panda/src/kernels/ACGrGrPlasticDrivingForce.C
 
-code ~/projects/panda/include/userobjects/GGEulerAngleProvider.h
-code ~/projects/panda/src/userobjects/GGEulerAngleProvider.C
+code ~/projects/panda/include/kernels/ACGrGrPlasticDrivingForce.h
+code ~/projects/panda/src/kernels/ACGrGrPlasticDrivingForce.C
     

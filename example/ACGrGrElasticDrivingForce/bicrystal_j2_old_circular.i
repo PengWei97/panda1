@@ -1,21 +1,23 @@
-my_file_name = test15
+my_file_name = t6
 # my_function = '100+0.01*sin(t*pi)'
-# my_function = '20*t' # 0.001s^{-1}
-# my_function = 'if(t<9,20*t,180)' # 0.001s^{-1}
+# my_function = '10*t' # 0.001s^{-1}
+my_function = 'if(t<30,1*t,30+0.01*sin(t))' # 0.001s^{-1}
 # my_function = 'if(t<9,20*t,180+0.1*sin(t*pi))' # 0.001s^{-1}
-my_function = 'if(t<3,20*t,60+0.02*sin(t*pi))'
-my_end_time = 600
-my_yield_0 = 1000 # MPa
-my_xymax = 2e3
-my_radus = 1e3
+# my_function = 'if(t<3,20*t,60+0.02*sin(t*pi))'
+my_end_time = 60000
+# my_yield_0 = 700 # MPa
+my_xmax = 1e3
+my_ymax = 1e3
+my_center = 0.5e3
+my_radus = 0.4e3
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 40
-  ny = 40
-  xmax = ${my_xymax}
-  ymax = ${my_xymax}
+  nx = 50
+  ny = 50
+  xmax = ${my_xmax}
+  ymax = ${my_ymax}
   elem_type = QUAD4
   # uniform_refine = 2
 []
@@ -37,11 +39,11 @@ my_radus = 1e3
 
 [ICs]
   [./PolycrystalICs]
-    [./BicrystalBoundingBoxIC]
-      x1 = 0
-      y1 = 0
-      x2 = ${my_radus}
-      y2 = ${my_xymax}
+    [./BicrystalCircleGrainIC]
+      radius = ${my_radus}
+      x = ${my_center}
+      y = ${my_center}
+      int_width = 75
     [../]
   [../]
 []
@@ -51,11 +53,23 @@ my_radus = 1e3
     order = FIRST
     family = LAGRANGE
   [../]
+  [./strain_xx]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./strain_yy]
     order = CONSTANT
     family = MONOMIAL
   [../]
+  [./elastic_strain11]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./elastic_strain22]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./stress_xx]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -67,11 +81,11 @@ my_radus = 1e3
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./f]
+  [./p_internal_parameter]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./p_internal_parameter]
+  [./HardFactor]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -123,6 +137,14 @@ my_radus = 1e3
     variable = bnds
     execute_on = timestep_end
   [../]
+  [./elastic_strain11]
+    type = RankTwoAux
+    variable = elastic_strain11
+    rank_two_tensor = elastic_strain
+    index_i = 0
+    index_j = 0
+    execute_on = timestep_end
+  [../]
   [./elastic_strain22]
     type = RankTwoAux
     variable = elastic_strain22
@@ -131,12 +153,26 @@ my_radus = 1e3
     index_j = 1
     execute_on = timestep_end
   [../]
+  [./strain_xx]
+    type = RankTwoAux
+    rank_two_tensor = total_strain
+    variable = strain_xx
+    index_i = 0
+    index_j = 0
+  [../]
   [./strain_yy]
     type = RankTwoAux
     rank_two_tensor = total_strain
     variable = strain_yy
     index_i = 1
     index_j = 1
+  [../]
+  [./stress_xx]
+    type = RankTwoAux
+    rank_two_tensor = stress
+    variable = stress_xx
+    index_i = 0
+    index_j = 0
   [../]
   [./stress_yy]
     type = RankTwoAux
@@ -150,17 +186,16 @@ my_radus = 1e3
     variable = VMstress
     property = von_mises_stress  
   [../]
-  [./f]
-    type = MaterialStdVectorAux
-    index = 0
-    property = plastic_yield_function
-    variable = f
-  [../]
   [./p_internal_parameter]
-    type = MaterialStdVectorAux
-    index = 0
-    property = plastic_internal_parameter
+    type = MaterialRealAux
+    # index = 0
+    property = eqv_plastic_strain
     variable = p_internal_parameter
+  [../]
+  [./HardFactor]
+    type = MaterialRealAux
+    variable = HardFactor
+    property = hard_factor  
   [../]
   [./unique_grains]
     type = FeatureFloodCountAux
@@ -204,16 +239,10 @@ my_radus = 1e3
     use_displaced_mesh = true
     # function = 50
   [../]
-  # [./top_displacement]
-  #   type = DirichletBC
-  #   variable = disp_y
-  #   boundary = top
-  #   value = 100.0
-  # [../]
   [./x_anchor]
     type = DirichletBC
     variable = disp_x
-    boundary = 'left right'
+    boundary = 'left'
     value = 0.0
   [../]
   [./y_anchor]
@@ -233,24 +262,25 @@ my_radus = 1e3
     GBmob0 = 2.5e-6 #m^4/(Js) from Schoenfelder 1997
     Q = 0.23 #Migration energy in eV
     GBenergy = 0.708 #GB energy in J/m^2
-    time_scale = 1.0e-6
+    time_scale = 1.0e-9
+    # use_displaced_mesh = true
   [../]
   [./ElasticityTensor]
     type = GGComputePolycrystalElasticityTensor
     grain_tracker = grain_tracker
+    # use_displaced_mesh = true
   [../]
-  # [./strain]
-  #   type = ComputeFiniteStrain #  ComputeSmallStrain # 
-  #   block = 0
-  #   displacements = 'disp_x disp_y'
-  # [../]
-  [./stress]
-    type = GGComputeMultiPlasticityStress # ComputeLinearElasticStress # 
+  [./fplastic]
+    type = Test4FiniteStrainPlasticMaterial #设置屈服函数
+    # implements rate-independent associative J2 plasticity 
+    # with isotropic hardening in the finite-strain framework.
     block = 0
-    ep_plastic_tolerance = 1E-9
-    plastic_models = j2
-    debug_fspb = crash
+    grain_tracker = grain_tracker
+    yield_stress='0. 700. 0.05 700. 0.1 700. 0.38 700. 0.95 700. 2. 700.'
+    outputs = exodus
+    output_properties = 'dhard_factor/dgr0 dhard_factor/dgr1'
   [../]
+  
 []
 
 [UserObjects]
@@ -270,17 +300,6 @@ my_radus = 1e3
     C_ijkl = '1.684e5 1.214e5 1.214e5 1.684e5 1.214e5 1.684e5 0.75e5 0.75e5 0.75e5'
 
     outputs = none
-  [../]
-  [./str]
-    type = TensorMechanicsHardeningLinear
-    value_0 = ${my_yield_0} # MPa
-    HardFactor = 200
-  [../]
-  [./j2]
-    type = GGTensorMechanicsPlasticJ2
-    yield_strength = str
-    yield_function_tolerance = 1E-3
-    internal_constraint_tolerance = 1E-9
   [../]
 []
 
@@ -307,21 +326,21 @@ my_radus = 1e3
     point = '0 0 0'
     variable = VMstress
   [../]
-  [./f]
-    type = PointValue
-    point = '0 0 0'
-    variable = f
-  [../]
   [./p_internal_parameter]
     type = PointValue
     point = '0 0 0'
     variable = p_internal_parameter
   [../]
-  [./run_time]
-    type = PerfGraphData
-    section_name = "Root"
-    data_type = total
+  [./HardFactor]
+    type = PointValue
+    point = '0 0 0'
+    variable = HardFactor
   [../]
+  # [./active_time]           # Time computer spent on simulation
+  #   type = PerfGraphData
+  #   section_name = "Root"
+  #   data_type = total
+  # [../]
 []
 
 [Preconditioning]
@@ -366,5 +385,11 @@ my_radus = 1e3
   execute_on = 'timestep_end'
   exodus = true
   csv = true
-  file_base = ./bcs_test/${my_file_name}
+  file_base = ./test3/${my_file_name}
+  [./my_console]
+    type = Console
+    output_linear = false
+    # output_screen = false
+    interval = 5
+  [../]
 []

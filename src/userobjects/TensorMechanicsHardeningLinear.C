@@ -17,10 +17,10 @@ TensorMechanicsHardeningLinear::validParams()
 {
   InputParameters params = TensorMechanicsHardeningModel::validParams();
   params.addRequiredParam<Real>("value_0", "The yield strength when internal variable = 0");
-  // params.addParam<Real>("HardFactor", 100.0, "The hardening factor");
+  params.addRequiredParam<Real>("HardFactor", "The hardening factor");
   params.addClassDescription("Hardening defined by linear hardenig rule");
-  params.addRequiredCoupledVarWithAutoBuild(
-      "v", "var_name_base", "op_num", "Array of coupled variables");
+  // params.addRequiredCoupledVarWithAutoBuild(
+  //     "v", "var_name_base", "op_num", "Array of coupled variables");
   return params;
 }
 
@@ -35,7 +35,7 @@ TensorMechanicsHardeningLinear::TensorMechanicsHardeningLinear(
 Real
 TensorMechanicsHardeningLinear::value(Real intnl) const
 {
-  return _value_0 + _hard_factor*intnl;
+  return _value_0 + _hard_factor * intnl;
   // return _value_0 * std::pow(intnl / _epsilon0 + 1, _exponent);
 }
 

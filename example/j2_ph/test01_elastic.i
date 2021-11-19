@@ -1,31 +1,31 @@
-# tar -cvf - out_GG_bicrystal_circular_2_f5_results.e-s??[05][0].* | pigz -9 -p 10 > out_GG_bicrystal_circular_2_f5_results.tgz
+my_filename = 'test01_elastic_04'
+my_function = 'if(t<20,t,20+0.02*sin(t))' # 0.001s^{-1}
+# my_function = 't' # 0.001s^{-1}
+my_wGB = 15
+my_num_adaptivity = 4
 
-# tar -cvf - *csv* *.e-s* | pigz -9 -p 10 > out_GG_bicrystal_circular_01_euler45_f0.tgz
+my_interval = 2
 
-my_GBmob0 = 2.5e-6
+my_end_time = 1000
+my_time_scale = 1.0e-9
 my_length_scale = 1.0e-9
-my_time_scale = 1.0e-9 # miu s
-my_wGB = 15 # nm
-my_T = 500
-my_filename = 'GG_bicrystal_circular_results'
-my_displacement = 50 # 5%
-# my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
-my_end_time = 4000
-# my_interval = 2 
+my_pressure_scale = 1.0e6
+
+my_xmax = 3e3
+my_ymax = 1e3
+my_radius = 1.0e3
+my_nx = 50
+my_ny = 20
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 100
-  ny = 100
-  nz = 0
-  xmin = 0
-  xmax = 1000
-  ymin = 0
-  ymax = 1000
-  zmin = 0
-  zmax = 0
+  nx = ${my_nx}
+  ny = ${my_ny}
+  xmax = ${my_xmax}
+  ymax = ${my_ymax}
   elem_type = QUAD4
+
 []
 
 [GlobalParams]
@@ -37,44 +37,18 @@ my_end_time = 4000
   [./PolycrystalVariables]
   [../]
   [./disp_x]
-    order = FIRST
-    family = LAGRANGE
-    # scaling = 1.0e4 #Scales residual to improve convergence 
   [../]
   [./disp_y]
-    order = FIRST
-    family = LAGRANGE
-    # scaling = 1.0e4 #Scales residual to improve convergence 
-  [../]
-[]
-
-[UserObjects]
-  [./euler_angle_file]
-    type = EulerAngleFileReader
-    file_name = grn_2_rand_2D.tex
-  [../]
-  [./grain_tracker]
-    type = GrainTrackerElasticity
-    threshold = 0.2
-    compute_var_to_feature_map = true
-    execute_on = 'initial timestep_begin'
-    flood_entity_type = ELEMENTAL
-
-    C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
-    # C_ijkl = '1.94e5 0.655e5 0.698e5 1.94e5 0.698e5 1.98e5 0.4627e5 0.4627e5 0.6435e5' # Titanium,2,0Pa，可行
-    
-    fill_method = symmetric9
-    euler_angle_provider = euler_angle_file
   [../]
 []
 
 [ICs]
   [./PolycrystalICs]
-    [./BicrystalCircleGrainIC]
-      radius = 400
-      x = 500
-      y = 500
-      int_width = 15
+    [./BicrystalBoundingBoxIC]
+      x1 = 0
+      y1 = 0
+      x2 = ${my_radius}
+      y2 = ${my_ymax}
     [../]
   [../]
 []
@@ -83,10 +57,6 @@ my_end_time = 4000
   [./bnds]
     order = FIRST
     family = LAGRANGE
-  [../]
-  [./total_energy_density]
-    order = CONSTANT
-    family = MONOMIAL
   [../]
   [./elastic_strain11]
     order = CONSTANT
@@ -100,27 +70,19 @@ my_end_time = 4000
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./stress11]
+  [./elastic_stress11]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./stress12]
+  [./elastic_stress22]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./stress22]
+  [./elastic_stress12]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./unique_grains]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./var_indices]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./vonmises_stress]
+  [./VMstress]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -132,6 +94,14 @@ my_end_time = 4000
     order = CONSTANT
     family = MONOMIAL
   [../]
+  [./total_energy_density]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./grad_energy_density]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
 []
 
 [Kernels]
@@ -140,23 +110,15 @@ my_end_time = 4000
   [./PolycrystalElasticDrivingForce]
   [../]
   [./TensorMechanics]
-    use_displaced_mesh = true
     displacements = 'disp_x disp_y'
   [../]
 []
 
 [AuxKernels]
-  [./BndsCalc]
+  [./bnds_aux]
     type = BndsCalcAux
     variable = bnds
     execute_on = timestep_end
-  [../]
-  [./local_free_energy]
-    type = TotalFreeEnergy
-    f_name = f_chem
-    variable = total_energy_density
-    kappa_names = 'kappa_op kappa_op'
-    interfacial_vars = 'gr0 gr1'
   [../]
   [./elastic_strain11]
     type = RankTwoAux
@@ -182,40 +144,36 @@ my_end_time = 4000
     index_j = 1
     execute_on = timestep_end
   [../]
-  [./stress11]
+  [./elastic_stress11]
     type = RankTwoAux
+    variable = elastic_stress11
     rank_two_tensor = stress
-    variable = stress11
     index_i = 0
     index_j = 0
+    execute_on = timestep_end
   [../]
-  [./stress12]
+  [./elastic_stress22]
     type = RankTwoAux
+    variable = elastic_stress22
     rank_two_tensor = stress
-    variable = stress12
-    index_i = 0
-    index_j = 1
-  [../]
-  [./stress22]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    variable = stress22
     index_i = 1
     index_j = 1
-  [../]
-  [./unique_grains]
-    type = FeatureFloodCountAux
-    variable = unique_grains
     execute_on = timestep_end
-    flood_counter = grain_tracker
-    field_display = UNIQUE_REGION
   [../]
-  [./var_indices]
-    type = FeatureFloodCountAux
-    variable = var_indices
+  [./elastic_stress12]
+    type = RankTwoAux
+    variable = elastic_stress12
+    rank_two_tensor = stress
+    index_i = 0
+    index_j = 1
     execute_on = timestep_end
-    flood_counter = grain_tracker
-    field_display = VARIABLE_COLORING
+  [../]
+  [./vonmises_stress]
+    type = RankTwoScalarAux
+    variable = VMstress
+    rank_two_tensor = stress
+    scalar_type = VonMisesStress
+    execute_on = timestep_end
   [../]
   [./C1111]
     type = RankFourAux
@@ -227,41 +185,33 @@ my_end_time = 4000
     index_i = 0
     execute_on = timestep_end
   [../]
-  [./vonmises_stress]
-    type = RankTwoScalarAux
-    variable = vonmises_stress
-    rank_two_tensor = stress
-    scalar_type = VonMisesStress
-    execute_on = timestep_end
-  [../]
   [./euler_angle]
     type = OutputEulerAngles
     variable = euler_angle
     euler_angle_provider = euler_angle_file
     grain_tracker = grain_tracker
     output_euler_angle = 'phi1'
-    #  phi1, Phi, phi2
-    execute_on = 'initial timestep_end'
+  [../]
+  [./local_free_energy]
+    type = TotalFreeEnergy
+    f_name = f_chem
+    variable = total_energy_density
+    kappa_names = 'kappa_op kappa_op'
+    interfacial_vars = 'gr0 gr1'
   [../]
 []
 
 [BCs]
-  [./Periodic]
-    [./All]
-      auto_direction = 'x'
-      variable = 'gr0 gr1'
-    [../]
-  [../]
   [./top_displacement]
-    type = DirichletBC
+    type = FunctionDirichletBC
     variable = disp_y
     boundary = top
-    value = ${my_displacement} # 500
+    function = ${my_function}
   [../]
   [./x_anchor]
     type = DirichletBC
     variable = disp_x
-    boundary = 'left right'
+    boundary = 'left'
     value = 0.0
   [../]
   [./y_anchor]
@@ -276,22 +226,21 @@ my_end_time = 4000
   [./Copper]
     type = GBEvolution
     block = 0
-    T = ${my_T} # K
+    T = 500 # K
     wGB = ${my_wGB} # nm
-    GBmob0 = ${my_GBmob0} # m^4/(Js) from Schoenfelder 1997
-    Q = 0.23 # Migration energy in eV
-    GBenergy = 0.708 # GB energy in J/m^2
-    time_scale = ${my_time_scale}
+    GBmob0 = 2.5e-6 #m^4/(Js) from Schoenfelder 1997
+    Q = 0.23 #Migration energy in eV
+    GBenergy = 0.708 #GB energy in J/m^2
     length_scale = ${my_length_scale}
-    # GBMobility = ${my_GBMobility}
+    time_scale = ${my_length_scale}
     outputs = my_exodus
+    output_properties = 'kappa_op L mu gamma_asymm sigma M_GB l_GB'
   [../]
   [./ElasticityTensor]
     type = ComputePolycrystalElasticityTensor
     grain_tracker = grain_tracker
     length_scale = ${my_length_scale}
-    time_scale = ${my_time_scale}
-    outputs = my_exodus
+    pressure_scale = ${my_pressure_scale}
   [../]
   [./strain]
     type = ComputeSmallStrain
@@ -302,11 +251,6 @@ my_end_time = 4000
     type = ComputeLinearElasticStress
     block = 0
   [../]
-  # [./elasticenergy]
-  #   type = ElasticEnergyMaterial
-  #   args = 'gr1 gr0'
-	#   outputs = my_exodus
-  # [../]
   [./local_free_energy]
     type = DerivativeParsedMaterial
     f_name= f_chem
@@ -325,66 +269,92 @@ my_end_time = 4000
     args = 'gr0 gr1'
     outputs = my_exodus
     output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
+    # f_elastic MPa
+    # df_elastic/dgr0--eV/nm^2
+    # MPa*(length_scale^3)*pressure_scale;
+  [../]
+[]
+
+[UserObjects]
+  [./euler_angle_file]
+    type = EulerAngleFileReader
+    file_name = test.tex
+  [../]
+  [./grain_tracker]
+    type = GrainTrackerElasticity
+    connecting_threshold = 0.05
+    compute_var_to_feature_map = true
+    flood_entity_type = elemental
+    execute_on = 'initial timestep_begin'
+
+    euler_angle_provider = euler_angle_file
+    fill_method = symmetric9
+    C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
+
+    outputs = none
   [../]
 []
 
 [Postprocessors]
-  [./ngrains]
-    type = FeatureFloodCount
-    variable = bnds
-    threshold = 0.7
+  [./dt]
+    type = TimestepSize
   [../]
   [./dofs]
     type = NumDOFs
-  [../]
-  [./dt]
-    type = TimestepSize
   [../]
   [./run_time]
     type = PerfGraphData
     section_name = "Root"
     data_type = total
   [../]
-  [./gr0area]
+  [./gr0_area]
     type = ElementIntegralVariablePostprocessor
     variable = gr0
   [../]
-  # [./F_elastic]
-  #   type = ElementIntegralMaterialProperty
-  #   mat_prop = f_elastic
-  # [../]
-  # [./F_chem]
-  #   type = ElementIntegralMaterialProperty
-  #   mat_prop = f_chem
-  #   outputs = csv
-  # [../]
-[]
-
-[Debug]
-  show_var_residual_norms = true
+  [./strain_yy]
+    type = ElementAverageValue
+    variable = elastic_strain22
+  [../]
+  [./stress_yy]
+    type = ElementAverageValue
+    variable = elastic_stress22
+  [../]
+  [./VMstress]
+    type = ElementAverageValue
+    variable = VMstress
+  [../]
+  [./F_elastic]
+    type = ElementIntegralMaterialProperty
+    mat_prop = f_elastic
+  [../]
+  [./F_chem]
+    type = ElementIntegralMaterialProperty
+    mat_prop = f_chem
+    # outputs = csv
+  [../]
 []
 
 [Preconditioning]
   [./SMP]
-    type = SMP
-    coupled_groups = 'gr0,gr1 disp_x,disp_y'
+   type = SMP
+   coupled_groups = 'gr0,gr1 disp_x,disp_y'
   [../]
 []
 
 [Executioner]
   type = Transient
-  scheme = bdf2
-  solve_type = PJFNK
+
+  solve_type = 'PJFNK'
   petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
   petsc_options_value = 'hypre boomeramg 31 0.7'
-  l_tol = 1.0e-4
-  l_max_its = 30
-  nl_max_its = 25
-  nl_rel_tol = 1.0e-7
 
-  automatic_scaling = true # to improve the convergence of linear solves
+  l_max_its = 30
+  l_tol = 1e-4
+  nl_max_its = 30
+  nl_rel_tol = 1e-9
+
   start_time = 0.0
-  end_time = 4000
+  end_time = ${my_end_time}
 
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -393,40 +363,36 @@ my_end_time = 4000
     cutback_factor = 0.8
     optimal_iterations = 8
   [../]
+
   [./Adaptivity]
-    initial_adaptivity = 2
-    refine_fraction = 0.8
-    coarsen_fraction = 0.05
-    max_h_level = 3
+    initial_adaptivity = ${my_num_adaptivity}
+    refine_fraction = 0.7
+    coarsen_fraction = 0.1
+    max_h_level = ${my_num_adaptivity}
   [../]
 []
 
 [Outputs]
   file_base = ./${my_filename}/out_${my_filename}
-  # exodus = true
   csv = true
-  # [./my_checkpoint]
-  #   type = Checkpoint
-  #   num_files = 6
-  #   interval = 5
-  # [../]
   [./my_exodus]
     type = Exodus
-    # interval = ${my_interval} # The interval at which time steps are output
+    interval = ${my_interval} # The interval at which time steps are output
     # sync_times = '10 50 100 500 1000 5000 10000 50000 100000'
     # sync_only = true
   [../]
   [./pgraph]
     type = PerfGraphOutput
-    execute_on = 'initial final'  # Default is "final"
+    execute_on = 'initial timestep_end final'  # Default is "final"
     level = 2                     # Default is 1
     heaviest_branch = true        # Default is false
     heaviest_sections = 7         # Default is 0
   [../]
   [./my_console]
     type = Console
-    output_linear = false
+    # output_linear = false
     # output_screen = false
-    interval = 5
+    # interval = 1
   [../]
+  execute_on = 'timestep_end'
 []

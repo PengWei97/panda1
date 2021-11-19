@@ -1,15 +1,17 @@
-my_file_name = './linearElasticStress/linearElasticStress1' 
-my_end_time = 20
+my_file_name = ./linearElasticStress/linearElasticStress6
+my_end_time = 10
+# my_function = '-1*15'
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 10
+  nx = 30
   ny = 3
   xmax = 1000
   ymax = 1000
   elem_type = QUAD4
   uniform_refine = 2
+  skip_partitioning=true
 []
 
 [GlobalParams]
@@ -89,9 +91,9 @@ my_end_time = 20
 
 [Modules/TensorMechanics/Master]
   [./all]
-    # strain = FINITE
+    strain = FINITE
     # displacements = 'disp_x disp_y'  
-    strain = SMALL # FINITE
+    # strain = SMALL # FINITE
   [../]
 []
 
@@ -166,6 +168,12 @@ my_end_time = 20
 []
 
 [BCs]
+  # [./top_displacement]
+  #   type = FunctionDirichletBC
+  #   variable = disp_y
+  #   boundary = top
+  #   function = ${my_function}
+  # [../]
   [./top_displacement]
     type = DirichletBC
     variable = disp_y
@@ -206,8 +214,12 @@ my_end_time = 20
   #   block = 0
   #   displacements = 'disp_x disp_y'
   # [../]
+  # [./stress]
+  #   type = ComputeLinearElasticStress
+  #   block = 0
+  # [../]
   [./stress]
-    type = ComputeLinearElasticStress
+    type = ComputeFiniteStrainElasticStress
     block = 0
   [../]
 []
@@ -240,6 +252,11 @@ my_end_time = 20
     type = ElementIntegralVariablePostprocessor
     variable = gr0
   [../]
+  [./active_time]           # Time computer spent on simulation
+    type = PerfGraphData
+    section_name = "Root"
+    data_type = total
+  [../]
 []
 
 [Preconditioning]
@@ -266,7 +283,7 @@ my_end_time = 20
   dt = 0.2
 
   [./Adaptivity]
-   initial_adaptivity = 2
+    initial_adaptivity = 2
     refine_fraction = 0.7
     coarsen_fraction = 0.1
     max_h_level = 2
@@ -274,7 +291,7 @@ my_end_time = 20
 []
 
 [Outputs]
-  file_name = ${my_file_name}
+  file_base = ${my_file_name}
   execute_on = 'timestep_end'
   exodus = true
   csv = true

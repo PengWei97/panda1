@@ -1,20 +1,10 @@
-# UserObject J2 test, with hardening, but with rate=0
-# apply uniform compression in x direction to give
-# trial stress_xx = -5, so sqrt(3*J2) = 5
-# with zero Poisson's ratio, this should return to
-# stress_xx = -3, stress_yy = -1 = stress_zz,
-# for strength = 2
-# (note that stress_xx - stress_yy = stress_xx - stress_zz = -2, so sqrt(3*j2) = 2,
-#  and that the mean stress remains = -5/3)
-my_filename = 'test06_2'
-my_xnum_element = 60
-my_ynum_element = 60
+my_filename = 'test001'
+my_xnum_element = 6
+my_ynum_element = 6
 my_xmax = 3e3
 my_ymax = 1e3
-# my_function = 'if(t<6,10*t,60+0.01*sin(t))'
-# my_function = 'if(t<3,20*t,60+0.02*sin(t*pi))'
 my_function = 't' # 0.001
-my_end_time = 150
+my_end_time = 100
 
 [Mesh]
   displacements = 'disp_x disp_y'
@@ -35,7 +25,6 @@ my_end_time = 150
     input = generated_mesh
   []
 []
-
 
 [Variables]
   [./disp_x]
@@ -94,26 +83,10 @@ my_end_time = 150
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./VMstrain]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
   [./VMstress]
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./HardFactor]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  # [./f]
-  #   order = CONSTANT
-  #   family = MONOMIAL
-  # [../]
-  # [./iter]
-  #   order = CONSTANT
-  #   family = MONOMIAL
-  # [../]
 []
 
 [AuxKernels]
@@ -145,33 +118,14 @@ my_end_time = 150
     index_i = 1
     index_j = 1
   [../]
-  [./VMstrain]
-    type = MaterialRealAux
-    variable = VMstrain
-    property = eqv_plastic_strain
-  [../]
   [./VMstress]
     type = MaterialRealAux
     variable = VMstress
     property = von_mises_stress  
   [../]
-  [./HardFactor]
-    type = MaterialRealAux
-    variable = HardFactor
-    property = hard_factor  
-  [../]
-  # [./f]
-  #   type = MaterialStdVectorAux
-  #   index = 0
-  #   property = plastic_yield_function
-  #   variable = f
-  # [../]
-  # [./iter]
-  #   type = MaterialRealAux
-  #   property = plastic_NR_iterations
-  #   variable = iter
-  # [../]
 []
+
+
 
 [Postprocessors]
   [./epsilon_yy]
@@ -198,11 +152,6 @@ my_end_time = 150
     point = '0 0 0'
     variable = stress_yy
   [../]
-  [./VMstrain]
-    type = PointValue
-    point = '0 0 0'
-    variable = VMstrain
-  [../]
   [./VMstress]
     type = PointValue
     point = '0 0 0'
@@ -212,11 +161,6 @@ my_end_time = 150
     type = ElementAverageValue
     variable = VMstress
   [../]
-  [./HardFactor]
-    type = PointValue
-    point = '0 0 0'
-    variable = HardFactor
-  [../]
   [./run_time]
     type = PerfGraphData
     section_name = "Root"
@@ -225,38 +169,21 @@ my_end_time = 150
   [./dt]
     type = TimestepSize
   [../]
-  # [./f]
-  #   type = PointValue
-  #   point = '0 0 0'
-  #   variable = f
-  # [../]
-  # [./iter]
-  #   type = PointValue
-  #   point = '0 0 0'
-  #   variable = iter
-  # [../]
 []
 
-# [UserObjects]
-#   [./str]
-#     type = GGTensorMechanicsHardeningConstant
-#     value = 700
-#   [../]
-#   # [./str]
-#   #   type = TensorMechanicsHardeningPowerRule
-#   #   value_0 = 700
-#   #   epsilon0 = 1
-#   #   exponent = 1e1
-#   #   # value_0 * (p / epsilon0 + 1)^{exponent})
-#   # [../]
-#   [./j2]
-#     type = GGTensorMechanicsPlasticJ2
-#     yield_strength = str
-#     yield_function_tolerance = 1E-5
-#     internal_constraint_tolerance = 1E-9
-#     max_iterations = 10
-#   [../]
-# []
+[UserObjects]
+  [./str]
+    type = TensorMechanicsHardeningConstant
+    value = 400 # MPa
+  [../]
+  [./j2]
+    type = GGTensorMechanicsPlasticJ2
+    yield_strength = str
+    yield_function_tolerance = 1E-5
+    internal_constraint_tolerance = 1E-9
+    max_iterations = 10
+  [../]
+[]
 
 [Modules/TensorMechanics/Master]
   [./all]
@@ -278,38 +205,33 @@ my_end_time = 150
     C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
     # use_displaced_mesh = true
   [../]
-  [./fplastic]
-    type = Test2FiniteStrainPlasticMaterial # 设置屈服函数
-    # implements rate-independent associative J2 plasticity 
-    # with isotropic hardening in the finite-strain framework.
+  [./mc]
+    type = GGComputeMultiPlasticityStress
     block = 0
-    yield_stress='0. 445. 0.05 610. 0.1 680. 0.38 810. 0.95 920. 2. 950.'
-    # use_displaced_mesh = true
-    # outputs = my_exodus
-    # output_properties = 'hard_factor'
-    # (610-445)/0.05 = 3300
-    # value_0 = 445
-    # hard_factor = 3300
-    # equivalent plastic strain = ??
-    # Yield function = sqrt(3*s_ij*s_ij/2) - K(equivalent plastic strain)
-    # s_ij = stress_ij - delta_ij*trace(stress)/3
-    # declareProperty
-      # plastic_strain
-      # eqv_plastic_strain
-    # getMaterialProperty(old)
-      # plastic_strain
-      # eqv_plastic_strain
-      # stress
-      # strain_increment
-      # rotation_increment
-      # elasticity_tensor    
+    ep_plastic_tolerance = 1E-9
+    plastic_models = j2
+    debug_fspb = crash
+    # tangent_operator = elastic
+    # perform_finite_strain_rotations = false
   [../]
 []
 
 [Executioner]
   type = Transient
+
+  solve_type = 'PJFNK'
+  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
+  petsc_options_value = 'hypre boomeramg 31 0.7'
+
+  dtmin = 2.0e-6 # The minimum timestep size in an adaptive run
+  l_max_its = 30
+  l_tol = 1e-4
+  nl_max_its = 30
+  nl_rel_tol = 1e-9
+
   end_time = ${my_end_time}
   dt = 0.05
+
   [./TimeStepper]
     type = IterationAdaptiveDT
     dt = 0.2
@@ -319,10 +241,38 @@ my_end_time = 150
   [../]
 []
 
+# [Executioner]
+#   type = Transient
+
+#   #Preconditioned JFNK (default)
+#   solve_type = 'PJFNK'
+
+#   petsc_options = '-snes_ksp_ew'
+#   petsc_options_iname = '-ksp_gmres_restart'
+#   petsc_options_value = '101'
+
+#   line_search = 'none'
+#   dtmin = 2.0e-6 # The minimum timestep size in an adaptive run
+#   l_max_its = 100
+#   nl_max_its = 100
+#   nl_rel_tol = 1e-6
+#   nl_abs_tol = 1e-10
+#   l_tol = 1e-4
+#   end_time = ${my_end_time}
+#   dt = 0.05
+
+#   [./TimeStepper]
+#     type = IterationAdaptiveDT
+#     dt = 0.2
+#     growth_factor = 1.2
+#     cutback_factor = 0.8
+#     optimal_iterations = 8
+#   [../]
+# []
+
 
 [Outputs]
   file_base = ./${my_filename}/out_${my_filename} 
-  # exodus = false
   [./my_exodus]
     type = Exodus
   [../]

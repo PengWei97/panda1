@@ -293,6 +293,7 @@ my_end_time = 4000
     type = ElasticEnergyMaterial
     args = 'gr1 gr0'
 	  outputs = my_exodus
+    
   [../]
 []
 
