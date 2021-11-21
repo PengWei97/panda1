@@ -7,13 +7,13 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "Test4FiniteStrainPlasticMaterial.h"
+#include "Test5FiniteStrainPlasticMaterial.h"
 #include "libmesh/utility.h"
 
-registerMooseObject("TensorMechanicsApp", Test4FiniteStrainPlasticMaterial);
+registerMooseObject("TensorMechanicsApp", Test5FiniteStrainPlasticMaterial);
 
 InputParameters
-Test4FiniteStrainPlasticMaterial::validParams()
+Test5FiniteStrainPlasticMaterial::validParams()
 {
   InputParameters params = ComputeStressBase::validParams();
 
@@ -21,21 +21,16 @@ Test4FiniteStrainPlasticMaterial::validParams()
       "yield_stress",
       "Input data as pairs of equivalent plastic strain and yield stress: Should "
       "start with equivalent plastic strain 0");
-  params.addParam<Real>("length_scale", 1.0e-9, "Length scale of the problem, in meters");
-  params.addParam<Real>("pressure_scale", 1.0e6, "Pressure scale of the problem, in pa");
   params.addParam<Real>("yield_strength_init", 2000.0, "the initial vaule yield strength of the problem, in MPa");
   params.addParam<Real>("rtol", 1e-8, "Plastic strain NR tolerance");
   params.addParam<Real>("ftol", 1e-4, "Consistency condition NR tolerance");
   params.addParam<Real>("eptol", 1e-7, "Equivalent plastic strain NR tolerance");
-  params.addRequiredParam<UserObjectName>(
-    "grain_tracker", "Name of GrainTracker user object that provides RankFourTensors");
-  params.addRequiredCoupledVarWithAutoBuild(
-      "v", "var_name_base", "op_num", "Array of coupled variables");
   params.addClassDescription("Associative J2 plasticity with isotropic hardening.");
+
   return params;
 }
 
-Test4FiniteStrainPlasticMaterial::Test4FiniteStrainPlasticMaterial(const InputParameters & parameters)
+Test5FiniteStrainPlasticMaterial::Test5FiniteStrainPlasticMaterial(const InputParameters & parameters)
   : ComputeStressBase(parameters),
     _yield_stress_vector(getParam<std::vector<Real>>("yield_stress")), // Read from input file
     _plastic_strain(declareProperty<RankTwoTensor>(_base_name + "plastic_strain")),
@@ -47,48 +42,29 @@ Test4FiniteStrainPlasticMaterial::Test4FiniteStrainPlasticMaterial(const InputPa
     _rotation_increment(getMaterialProperty<RankTwoTensor>(_base_name + "rotation_increment")),
     _elasticity_tensor_name(_base_name + "elasticity_tensor"),
     _elasticity_tensor(getMaterialPropertyByName<RankFourTensor>(_elasticity_tensor_name)),
-    _von_mises_stress(declareProperty<Real>(_base_name + "von_mises_stress")),
-    _hard_factor_name(_base_name + "hard_factor"),
-    _hard_factor(declareProperty<Real>(_base_name + "hard_factor")),   
-    _eqv_plastic_function(declareProperty<Real>(_base_name + "eqv_plastic_function")), 
-    _grain_tracker(getUserObject<GrainDataTracker<RankFourTensor>>("grain_tracker")),
-    _op_num(coupledComponents("v")),
-    _vals(coupledValues("v")),
-    _D_hard_factor(_op_num),
-    _length_scale(getParam<Real>("length_scale")),
-    _pressure_scale(getParam<Real>("pressure_scale")),
-    _yield_strength_init(getParam<Real>("yield_strength_init")),
-    _JtoeV(6.24150974e18),
+    _von_mises_stress(declareProperty<Real>(_base_name + "von_mises_stress")),  
+    // _hard_factor(declareProperty<Real>(_base_name + "hard_factor")),  
+    // _eqv_plastic_function(declareProperty<Real>(_base_name + "eqv_plastic_function")), 
     _rtol(getParam<Real>("rtol")),
     _ftol(getParam<Real>("ftol")),
     _eptol(getParam<Real>("eptol")),
     _deltaOuter(RankTwoTensor::Identity().outerProduct(RankTwoTensor::Identity())),
     _deltaMixed(RankTwoTensor::Identity().mixedProductIkJl(RankTwoTensor::Identity()))
 {
-    for (MooseIndex(_op_num) op_index = 0; op_index < _op_num; ++op_index)
-  {
-    // declare elasticity tensor derivative properties
-    _D_hard_factor[op_index] = &declarePropertyDerivative<Real>(
-        _hard_factor_name, getVar("v", op_index)->name());
-  }
 }
 
 void
-Test4FiniteStrainPlasticMaterial::initQpStatefulProperties()
+Test5FiniteStrainPlasticMaterial::initQpStatefulProperties()
 {
   ComputeStressBase::initQpStatefulProperties();
   _plastic_strain[_qp].zero();
   _eqv_plastic_strain[_qp] = 0.0;
-  _von_mises_stress[_qp] = 0;
-  _hard_factor[_qp] = 2e3;
-  _eqv_plastic_function[_qp] = 0.0;
+  _von_mises_stress[_qp] = 0.0;
 }
 
 void
-Test4FiniteStrainPlasticMaterial::computeQpStress()
+Test5FiniteStrainPlasticMaterial::computeQpStress()
 {
-
-  computeHardFactor(); 
 
   // perform the return-mapping algorithm
   returnMap(_stress_old[_qp],
@@ -98,7 +74,6 @@ Test4FiniteStrainPlasticMaterial::computeQpStress()
             _elasticity_tensor[_qp],
             _stress[_qp],
             _eqv_plastic_strain[_qp],
-            _hard_factor[_qp],
             _plastic_strain[_qp]);
 
   // Rotate the stress tensor to the current configuration
@@ -113,9 +88,7 @@ Test4FiniteStrainPlasticMaterial::computeQpStress()
 
   _Jacobian_mult[_qp] = _elasticity_tensor[_qp];
 
-  _von_mises_stress[_qp] = std::sqrt(3*_stress[_qp].secondInvariant());
-
-  _eqv_plastic_function[_qp] = _eqv_plastic_strain[_qp]*_hard_factor[_qp];
+  _von_mises_stress[_qp] = std::sqrt(3.0*_stress[_qp].secondInvariant());
 }
 
 /**
@@ -180,14 +153,13 @@ Test4FiniteStrainPlasticMaterial::computeQpStress()
  *     internalPotential = -1 in the "rep" equation.
  */
 void
-Test4FiniteStrainPlasticMaterial::returnMap(const RankTwoTensor & sig_old,
+Test5FiniteStrainPlasticMaterial::returnMap(const RankTwoTensor & sig_old,
                                        const Real eqvpstrain_old,
                                        const RankTwoTensor & plastic_strain_old,
                                        const RankTwoTensor & delta_d,
                                        const RankFourTensor & E_ijkl,
                                        RankTwoTensor & sig,
                                        Real & eqvpstrain,
-                                       Real & hard_factor,
                                        RankTwoTensor & plastic_strain)
 {
   // the yield function, must be non-positive
@@ -259,7 +231,7 @@ Test4FiniteStrainPlasticMaterial::returnMap(const RankTwoTensor & sig_old,
   eqvpstrain = eqvpstrain_old;
   plastic_strain = plastic_strain_old;
 
-  yield_stress = getYieldStress(eqvpstrain,hard_factor); // yield stress at this equivalent plastic strain
+  yield_stress = getYieldStress(eqvpstrain); // yield stress at this equivalent plastic strain
   if (yieldFunction(sig, yield_stress) > toly)
   {
     // the sig just calculated is inadmissable.  We must return to the yield surface.
@@ -286,7 +258,7 @@ Test4FiniteStrainPlasticMaterial::returnMap(const RankTwoTensor & sig_old,
 
       df_dsig = dyieldFunction_dstress(sig);
       getJac(sig, E_ijkl, flow_incr, dr_dsig);   // gets dr_dsig = d(resid_ij)/d(sig_kl)
-      fq = dyieldFunction_dinternal(eqvpstrain,hard_factor); // d(f)/d(eqvpstrain)
+      fq = dyieldFunction_dinternal(eqvpstrain); // d(f)/d(eqvpstrain)
 
       /**
        * The linear system is
@@ -342,13 +314,13 @@ Test4FiniteStrainPlasticMaterial::returnMap(const RankTwoTensor & sig_old,
 }
 
 Real
-Test4FiniteStrainPlasticMaterial::yieldFunction(const RankTwoTensor & stress, const Real yield_stress)
+Test5FiniteStrainPlasticMaterial::yieldFunction(const RankTwoTensor & stress, const Real yield_stress)
 {
   return getSigEqv(stress) - yield_stress;
 }
 
 RankTwoTensor
-Test4FiniteStrainPlasticMaterial::dyieldFunction_dstress(const RankTwoTensor & sig)
+Test5FiniteStrainPlasticMaterial::dyieldFunction_dstress(const RankTwoTensor & sig)
 {
   RankTwoTensor deriv = sig.dsecondInvariant();
   deriv *= std::sqrt(3.0 / sig.secondInvariant()) / 2.0;
@@ -356,33 +328,33 @@ Test4FiniteStrainPlasticMaterial::dyieldFunction_dstress(const RankTwoTensor & s
 }
 
 Real
-Test4FiniteStrainPlasticMaterial::dyieldFunction_dinternal(const Real equivalent_plastic_strain, const Real hard_factor)
+Test5FiniteStrainPlasticMaterial::dyieldFunction_dinternal(const Real equivalent_plastic_strain)
 {
-  return -getdYieldStressdPlasticStrain(equivalent_plastic_strain, hard_factor);
+  return -getdYieldStressdPlasticStrain(equivalent_plastic_strain);
   // return -getdYieldStressdPlasticStrain(equivalent_plastic_strain);
 }
 
 RankTwoTensor
-Test4FiniteStrainPlasticMaterial::flowPotential(const RankTwoTensor & sig)
+Test5FiniteStrainPlasticMaterial::flowPotential(const RankTwoTensor & sig)
 {
   return dyieldFunction_dstress(sig); // this plasticity model assumes associative flow
 }
 
 Real
-Test4FiniteStrainPlasticMaterial::internalPotential()
+Test5FiniteStrainPlasticMaterial::internalPotential()
 {
   return -1;
 }
 
 Real
-Test4FiniteStrainPlasticMaterial::getSigEqv(const RankTwoTensor & stress)
+Test5FiniteStrainPlasticMaterial::getSigEqv(const RankTwoTensor & stress)
 {
   return std::sqrt(3 * stress.secondInvariant());
 }
 
 // Jacobian for stress update algorithm
 void
-Test4FiniteStrainPlasticMaterial::getJac(const RankTwoTensor & sig,
+Test5FiniteStrainPlasticMaterial::getJac(const RankTwoTensor & sig,
                                     const RankFourTensor & E_ijkl,
                                     Real flow_incr,
                                     RankFourTensor & dresid_dsig)
@@ -411,7 +383,7 @@ Test4FiniteStrainPlasticMaterial::getJac(const RankTwoTensor & sig,
 
 // Obtain yield stress for a given equivalent plastic strain (input)
 Real
-Test4FiniteStrainPlasticMaterial::getYieldStress(const Real eqpe, const Real hf)
+Test5FiniteStrainPlasticMaterial::getYieldStress(const Real eqpe)
 {
   unsigned nsize;
 
@@ -423,14 +395,35 @@ Test4FiniteStrainPlasticMaterial::getYieldStress(const Real eqpe, const Real hf)
 
   unsigned int ind = 0;
   Real tol = 1e-8;
-  // Real hard_factor = 3300.0;
-  // Real value_0 = 400.0;
 
-  return _yield_strength_init + hf*eqpe;  
+  // while (ind < nsize)
+  // {
+  //   if (std::abs(eqpe - _yield_stress_vector[ind]) < tol)
+  //     return _yield_stress_vector[ind + 1];
+
+  //   if (ind + 2 < nsize)
+  //   {
+  //     if (eqpe > _yield_stress_vector[ind] && eqpe < _yield_stress_vector[ind + 2])
+  //       return _yield_stress_vector[ind + 1] +
+  //              (eqpe - _yield_stress_vector[ind]) /
+  //                  (_yield_stress_vector[ind + 2] - _yield_stress_vector[ind]) *
+  //                  (_yield_stress_vector[ind + 3] - _yield_stress_vector[ind + 1]);
+  //   }
+  //   else
+  //     return _yield_stress_vector[nsize - 1];
+
+  //   ind += 2;
+  // }
+
+  Real yield_strength_init = 2.0e3;
+  Real hf = 2.0e4;
+
+  return yield_strength_init + hf*eqpe;
+  // return 0.0;
 }
 
 Real
-Test4FiniteStrainPlasticMaterial::getdYieldStressdPlasticStrain(const Real eqpe, const Real hf)
+Test5FiniteStrainPlasticMaterial::getdYieldStressdPlasticStrain(const Real eqpe)
 {
   unsigned nsize;
 
@@ -440,70 +433,28 @@ Test4FiniteStrainPlasticMaterial::getdYieldStressdPlasticStrain(const Real eqpe,
     mooseError("Error in yield stress input: Should be a vector with eqv plastic strain and yield "
                "stress pair values.\n");
 
-  // Real value_0 = 800.0;
-
   unsigned int ind = 0;
-  
+
+  // while (ind < nsize)
+  // {
+  //   if (ind + 2 < nsize)
+  //   {
+  //     if (eqpe >= _yield_stress_vector[ind] && eqpe < _yield_stress_vector[ind + 2])
+  //       return (_yield_stress_vector[ind + 3] - _yield_stress_vector[ind + 1]) /
+  //              (_yield_stress_vector[ind + 2] - _yield_stress_vector[ind]);
+  //   }
+  //   else
+  //     return 0.0;
+
+  //   ind += 2;
+  // }
+  // return 0.0;
+
+  Real hf = 2.0e4; 
   if (eqpe > 0)
     return hf;
   else
     return 0.0;
-}
 
-void
-Test4FiniteStrainPlasticMaterial::computeHardFactor()
-{
-  // Get list of active order parameters from grain tracker
-  const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
-
-  // _hard_factor[_qp] = 0.0;
-  Real sum_h = 0.0;
-
-  std::vector<Real> hardFactor = {1.75e4,2.25e4};
-  
-  for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index)
-  {
-    auto grain_id = op_to_grains[op_index];
-    if (grain_id == FeatureFloodCount::invalid_id)
-      continue;
-
-    // Interpolation factor for elasticity tensors
-    Real h = (1.0 + std::sin(libMesh::pi * ((*_vals[op_index])[_qp] - 0.5))) / 2.0;
-
-    // Sum all rotated elasticity tensors
-    _hard_factor[_qp] += hardFactor[op_index] * h;
-    sum_h += h;
-  }
-
-  const Real tol = 1.0e-10;
-  sum_h = std::max(sum_h, tol);
-  _hard_factor[_qp] /= sum_h;
-  
-  for (MooseIndex(_op_num) op_index = 0; op_index < _op_num; ++op_index)
-    (*_D_hard_factor[op_index])[_qp] = 0.0;
-
-  auto  length_scale = 1.0e-9;
-  auto  pressure_scale = 1.0e6;
-  auto  JtoeV = 6.24150974e18;
-
-  for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index)
-  {
-    auto grain_id = op_to_grains[op_index];
-    if (grain_id == FeatureFloodCount::invalid_id)
-      continue;
-
-    Real dhdopi = libMesh::pi * std::cos(libMesh::pi * ((*_vals[op_index])[_qp] - 0.5)) / 2.0;
-    Real & H_deriv = (*_D_hard_factor[op_index])[_qp];
-
-    H_deriv = (hardFactor[op_index] - _hard_factor[_qp]) * dhdopi / sum_h;
-
-    // Convert from XPa to eV/(xm)^3, where X is pressure scale and x is length scale;
-    // H_deriv *= _JtoeV * (_length_scale * _length_scale * _length_scale) * _pressure_scale;
-
-    H_deriv *= JtoeV * (length_scale * length_scale * length_scale) * pressure_scale;
-
-    // H_deriv = (hardFactor[op_index] - _hard_factor[_qp]) * dhdopi / sum_h;
-  }    
-
-  // return _hard_factor[_qp];
+  return 0.0;
 }

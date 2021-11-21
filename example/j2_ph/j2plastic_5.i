@@ -1,6 +1,6 @@
 my_filename = 'test02_j2_02'
-my_xnum_element = 50
-my_ynum_element = 20
+my_xnum_element = 1 # 50
+my_ynum_element = 1 # 20
 my_xmax = 3e3
 my_ymax = 1e3
 # my_function = 't' # 0.001
@@ -163,11 +163,11 @@ my_HardFactor = 2e4 # 30000.0
     type = ElementAverageValue
     variable = VMstress
   [../]
-  [./run_time]
-    type = PerfGraphData
-    section_name = "Root"
-    data_type = total
-  [../]
+  # [./run_time]
+  #   type = PerfGraphData
+  #   section_name = "Root"
+  #   data_type = total
+  # [../]
   [./dt]
     type = TimestepSize
   [../]
@@ -260,11 +260,11 @@ my_HardFactor = 2e4 # 30000.0
   [./csv]
     type = CSV
   [../]
-  [./pgraph]
-    type = PerfGraphOutput
-    execute_on = 'initial timestep_end final'  # Default is "final"
-    level = 2                     # Default is 1
-    heaviest_branch = true        # Default is false
-    heaviest_sections = 7         # Default is 0
-  [../]
+  # [./pgraph]
+  #   type = PerfGraphOutput
+  #   execute_on = 'initial timestep_end final'  # Default is "final"
+  #   level = 2                     # Default is 1
+  #   heaviest_branch = true        # Default is false
+  #   heaviest_sections = 7         # Default is 0
+  # [../]
 []

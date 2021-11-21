@@ -29,6 +29,8 @@ TensorMechanicsHardeningLinear::TensorMechanicsHardeningLinear(
   : TensorMechanicsHardeningModel(parameters),
     _value_0(getParam<Real>("value_0")),
     _hard_factor(getParam<Real>("HardFactor"))
+    // _op_num(coupledComponents("v")),
+    // _vals(coupledValues("v"))
 {
 }
 

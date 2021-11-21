@@ -272,8 +272,8 @@ my_yield_strength_init = 2e3
     T = 500 # K
     wGB = 75 # nm
     GBmob0 = 2.5e-6 #m^4/(Js) from Schoenfelder 1997
-    Q = 0.23 #Migration energy in eV
-    GBenergy = 0.708 #GB energy in J/m^2
+    Q = 0.23 # Migration energy in eV
+    GBenergy = 0.708 # GB energy in J/m^2
     time_scale = ${my_time_scale}
     length_scale = ${my_length_scale}
   [../]
@@ -407,14 +407,14 @@ my_yield_strength_init = 2e3
   start_time = 0.0
   end_time = ${my_end_time}
   # # num_steps = 30
-  # dt = 0.2
-  [./TimeStepper]
-    type = IterationAdaptiveDT
-    dt = 0.2
-    growth_factor = 1.2
-    cutback_factor = 0.8
-    optimal_iterations = 8
-  [../]
+  dt = 0.1
+  # [./TimeStepper]
+  #   type = IterationAdaptiveDT
+  #   dt = 0.2
+  #   growth_factor = 1.2
+  #   cutback_factor = 0.8
+  #   optimal_iterations = 8
+  # [../]
   # [./Adaptivity]
   #   initial_adaptivity = 5
   #   refine_fraction = 0.7

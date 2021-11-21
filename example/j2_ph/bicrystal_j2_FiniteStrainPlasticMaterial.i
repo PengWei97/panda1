@@ -1,4 +1,4 @@
-my_filename = 'test03_j2Ph_02'
+my_filename = 'test04_j2Ph_01'
 my_xnum_element = 50
 my_ynum_element = 20
 my_xmax = 3e3
@@ -6,7 +6,7 @@ my_ymax = 1e3
 # my_function = 't' # 0.001
 my_function = 'if(t<40,t,40+0.02*sin(t))' # 0.001s^{-1}
 my_end_time = 1.0e3
-my_HardFactor = 2e4 # 30000.0
+# my_HardFactor = 2e4 # 30000.0
 
 my_radus = 1e3
 
@@ -15,6 +15,9 @@ my_length_scale = 1.0e-9
 my_pressure_scale = 1.0e6
 
 my_num_adaptivity = 3
+
+my_yield_strength_init = 2e3
+
 [Mesh]
   displacements = 'disp_x disp_y'
   [./generated_mesh]
@@ -247,18 +250,18 @@ my_num_adaptivity = 3
 []
 
 [UserObjects]
-  [./str]
-    type = TensorMechanicsHardeningLinear
-    value_0 = 2000 # MPa
-    HardFactor = ${my_HardFactor} # 30000.0 # MPa
-  [../]
-  [./j2]
-    type = GGTensorMechanicsPlasticJ2
-    yield_strength = str
-    yield_function_tolerance = 1E-5
-    internal_constraint_tolerance = 1E-9
-    max_iterations = 10
-  [../]
+  # [./str]
+  #   type = TensorMechanicsHardeningLinear
+  #   value_0 = 2000 # MPa
+  #   HardFactor = ${my_HardFactor} # 30000.0 # MPa
+  # [../]
+  # [./j2]
+  #   type = GGTensorMechanicsPlasticJ2
+  #   yield_strength = str
+  #   yield_function_tolerance = 1E-5
+  #   internal_constraint_tolerance = 1E-9
+  #   max_iterations = 10
+  # [../]
   [./euler_angle_file]
     type = EulerAngleFileReader
     file_name = test.tex
@@ -299,17 +302,30 @@ my_num_adaptivity = 3
 []
 
 [Materials]
-  [./mc]
-    type = GGComputeMultiPlasticityStress
+  # [./mc]
+  #   type = GGComputeMultiPlasticityStress
+  #   block = 0
+  #   ep_plastic_tolerance = 1E-9
+  #   plastic_models = j2
+  #   debug_fspb = crash
+  #   # tangent_operator = elastic
+  #   # perform_finite_strain_rotations = false
+  #   # plastic_strain, plastic_internal_parameter, 
+  #   # plastic_yield_function
+  #   # total_strain, stress, elastic_strain
+  # [../]
+  [./fplastic]
+    type = Test4FiniteStrainPlasticMaterial #设置屈服函数
+    # implements rate-independent associative J2 plasticity 
+    # with isotropic hardening in the finite-strain framework.
     block = 0
-    ep_plastic_tolerance = 1E-9
-    plastic_models = j2
-    debug_fspb = crash
-    # tangent_operator = elastic
-    # perform_finite_strain_rotations = false
-    # plastic_strain, plastic_internal_parameter, 
-    # plastic_yield_function
-    # total_strain, stress, elastic_strain
+    grain_tracker = grain_tracker
+    yield_stress='0. 700. 0.05 700. 0.1 700. 0.38 700. 0.95 700. 2. 700.'
+    outputs = my_exodus
+    output_properties = 'dhard_factor/dgr0 dhard_factor/dgr1'
+    length_scale = ${my_length_scale}
+    pressure_scale = ${my_pressure_scale}
+    yield_strength_init = ${my_yield_strength_init}
   [../]
   [./Copper]
     type = GBEvolution

@@ -36,4 +36,10 @@ private:
 
   /// The value = value_0 + _h_factor*p
   const Real _hard_factor;
+  
+  // /// Number of order parameters
+  // const unsigned int _op_num;
+
+  // /// Order parameters
+  // const std::vector<const VariableValue *> _vals;
 };

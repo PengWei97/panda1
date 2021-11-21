@@ -1,20 +1,18 @@
-my_filename = 'test03_j2Ph_02'
+my_filename = 'test07_j2_03' # test05系列用于建立j2弹性能的耦合，主要设置硬化参数的梯度化
 my_xnum_element = 50
 my_ynum_element = 20
 my_xmax = 3e3
 my_ymax = 1e3
 # my_function = 't' # 0.001
 my_function = 'if(t<40,t,40+0.02*sin(t))' # 0.001s^{-1}
-my_end_time = 1.0e3
+my_end_time = 1000
 my_HardFactor = 2e4 # 30000.0
 
-my_radus = 1e3
+my_radus = 1.0e3
 
-my_time_scale = 1.0e-9
 my_length_scale = 1.0e-9
-my_pressure_scale = 1.0e6
+my_time_scale = 1.0e-9
 
-my_num_adaptivity = 3
 [Mesh]
   displacements = 'disp_x disp_y'
   [./generated_mesh]
@@ -33,12 +31,6 @@ my_num_adaptivity = 3
     new_boundary = 6
     input = generated_mesh
   []
-[]
-
-[GlobalParams]
-  op_num = 2
-  var_name_base = gr
-  displacements = 'disp_x disp_y'
 []
 
 [Variables]
@@ -99,6 +91,14 @@ my_num_adaptivity = 3
     order = FIRST
     family = LAGRANGE
   [../]
+  [./euler_angle]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./C1111]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./strain_yy]
     order = CONSTANT
     family = MONOMIAL
@@ -119,17 +119,31 @@ my_num_adaptivity = 3
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./C1111]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./euler_angle]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
 []
 
 [AuxKernels]
+  [./bnds_aux]
+    type = BndsCalcAux
+    variable = bnds
+    execute_on = timestep_end
+  [../]
+  [./C1111]
+    type = RankFourAux
+    variable = C1111
+    rank_four_tensor = elasticity_tensor
+    index_l = 0
+    index_j = 0
+    index_k = 0
+    index_i = 0
+    execute_on = timestep_end
+  [../]
+  [./euler_angle]
+    type = OutputEulerAngles
+    variable = euler_angle
+    euler_angle_provider = euler_angle_file
+    grain_tracker = grain_tracker
+    output_euler_angle = 'phi1'
+  [../]
   [./strain_yy]
     type = RankTwoAux
     rank_two_tensor = total_strain
@@ -163,33 +177,24 @@ my_num_adaptivity = 3
     variable = VMstress
     property = von_mises_stress  
   [../]
-  [./bnds_aux]
-    type = BndsCalcAux
-    variable = bnds
-    execute_on = timestep_end
-  [../]
-  [./C1111]
-    type = RankFourAux
-    variable = C1111
-    rank_four_tensor = elasticity_tensor
-    index_l = 0
-    index_j = 0
-    index_k = 0
-    index_i = 0
-    execute_on = timestep_end
-  [../]
-  [./euler_angle]
-    type = OutputEulerAngles
-    variable = euler_angle
-    euler_angle_provider = euler_angle_file
-    grain_tracker = grain_tracker
-    output_euler_angle = 'phi1'
+[]
+
+[Functions]
+  [./timestep_fn]
+    type = ParsedFunction
+    value = 'if(t<40,0.2,10)'
   [../]
 []
 
-
-
 [Postprocessors]
+  [./timestep_pp]
+    type = FunctionValuePostprocessor
+    function = timestep_fn
+  [../]
+  [./gr0_area]
+    type = ElementIntegralVariablePostprocessor
+    variable = gr0
+  [../]
   [./epsilon_yy]
     type = PointValue
     point = '0 0 0'
@@ -223,42 +228,17 @@ my_num_adaptivity = 3
     type = ElementAverageValue
     variable = VMstress
   [../]
-  [./run_time]
-    type = PerfGraphData
-    section_name = "Root"
-    data_type = total
-  [../]
+  # [./run_time]
+  #   type = PerfGraphData
+  #   section_name = "Root"
+  #   data_type = total
+  # [../]
   [./dt]
     type = TimestepSize
-  [../]
-  [./gr0_area]
-    type = ElementIntegralVariablePostprocessor
-    variable = gr0
-  [../]
-  [./F_elastic]
-    type = ElementIntegralMaterialProperty
-    mat_prop = f_elastic
-  [../]
-  [./F_chem]
-    type = ElementIntegralMaterialProperty
-    mat_prop = f_chem
-    # outputs = csv
   [../]
 []
 
 [UserObjects]
-  [./str]
-    type = TensorMechanicsHardeningLinear
-    value_0 = 2000 # MPa
-    HardFactor = ${my_HardFactor} # 30000.0 # MPa
-  [../]
-  [./j2]
-    type = GGTensorMechanicsPlasticJ2
-    yield_strength = str
-    yield_function_tolerance = 1E-5
-    internal_constraint_tolerance = 1E-9
-    max_iterations = 10
-  [../]
   [./euler_angle_file]
     type = EulerAngleFileReader
     file_name = test.tex
@@ -296,20 +276,39 @@ my_num_adaptivity = 3
     var_name_base = gr
       # GGACGrGrElasticDrivingForce
   [../]
+  # [./ACGrGrPlasticDrivingForce1]
+  #   type = ACGrGrPlasticDrivingForce
+  #   D_hard_factor_name = dhard_factor/dgr0
+  #   variable = gr0
+  # [../]
+  # [./ACGrGrPlasticDrivingForce2]
+  #   type = ACGrGrPlasticDrivingForce
+  #   D_hard_factor_name = dhard_factor/dgr1
+  #   variable = gr1
+  # [../]
+[]
+
+[GlobalParams]
+  op_num = 2
+  var_name_base = gr
+  displacements = 'disp_x disp_y'
 []
 
 [Materials]
-  [./mc]
-    type = GGComputeMultiPlasticityStress
-    block = 0
-    ep_plastic_tolerance = 1E-9
-    plastic_models = j2
-    debug_fspb = crash
-    # tangent_operator = elastic
-    # perform_finite_strain_rotations = false
-    # plastic_strain, plastic_internal_parameter, 
-    # plastic_yield_function
-    # total_strain, stress, elastic_strain
+  # [./elasticity_tensor]
+  #   type = ComputeElasticityTensor
+  #   block = 0
+  #   fill_method = symmetric9
+  #   C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
+  #   # use_displaced_mesh = true
+  # [../]
+  [./fplastic]
+    type = Test6FiniteStrainPlasticMaterial #设置屈服函数
+    # implements rate-independent associative J2 plasticity 
+    # with isotropic hardening in the finite-strain framework.
+    block=0
+    yield_stress='0. 445. 0.05 610. 0.1 680. 0.38 810. 0.95 920. 2. 950.'
+    grain_tracker = grain_tracker
   [../]
   [./Copper]
     type = GBEvolution
@@ -317,8 +316,8 @@ my_num_adaptivity = 3
     T = 500 # K
     wGB = 75 # nm
     GBmob0 = 2.5e-6 #m^4/(Js) from Schoenfelder 1997
-    Q = 0.23 #Migration energy in eV
-    GBenergy = 0.708 #GB energy in J/m^2
+    Q = 0.23 # Migration energy in eV
+    GBenergy = 0.708 # GB energy in J/m^2
     time_scale = ${my_time_scale}
     length_scale = ${my_length_scale}
   [../]
@@ -326,31 +325,12 @@ my_num_adaptivity = 3
     type = GGComputePolycrystalElasticityTensor
     grain_tracker = grain_tracker
   [../]
-  [./elastic_free_energy]
-    type = GGElasticEnergyMaterial
-    f_name = f_elastic
-    block = 0
-    args = 'gr0 gr1'
-    outputs = my_exodus
-    output_properties = 'f_elastic df_elastic/dgr0 df_elastic/dgr1'
-  [../]
-  [./local_free_energy]
-    type = DerivativeParsedMaterial
-    f_name= f_chem
-    args = 'gr0 gr1'
-    material_property_names = 'mu gamma_asymm'
-    function = 'mu*(gr0^4/4.0 - gr0^2/2.0 + gr1^4/4.0 - gr1^2/2.0 + gamma_asymm*gr0^2*gr1^2+1.0/4.0)'
-    derivative_order = 2
-    enable_jit = true
-    outputs = my_exodus
-    output_properties = 'f_chem df_chem/dgr0 df_chem/dgr1'
-  [../]
 []
 
 [Preconditioning]
   [./SMP]
    type = SMP
-   coupled_groups = 'gr0 gr1 disp_x,disp_y'
+   coupled_groups = 'gr0,gr1 disp_x,disp_y'
   [../]
 []
 
@@ -358,12 +338,13 @@ my_num_adaptivity = 3
   type = Transient
 
   solve_type = 'PJFNK'
-  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
-  petsc_options_value = 'hypre boomeramg 31 0.7'
-  # petsc_options_iname = '-pc_type' # Names of PETSc name/value pairs
-  # petsc_options_value = 'lu' # 
+  petsc_options_iname = '-pc_type'
+  petsc_options_value = 'lu'
 
-  dtmin = 2.0e-3 # The minimum timestep size in an adaptive run
+  # petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
+  # petsc_options_value = 'hypre boomeramg 31 0.7'
+
+  dtmin = 2.0e-6 # The minimum timestep size in an adaptive run
   l_max_its = 30
   l_tol = 1e-4
   nl_max_its = 30
@@ -378,16 +359,17 @@ my_num_adaptivity = 3
     growth_factor = 1.2
     cutback_factor = 0.8
     optimal_iterations = 8
+    timestep_limiting_postprocessor = timestep_pp
+    # time_t = '0 60 1000'
+    # time_dt = '0.2 0.2 10'
   [../]
-
   [./Adaptivity]
-    initial_adaptivity = ${my_num_adaptivity}
+    initial_adaptivity = 5
     refine_fraction = 0.7
     coarsen_fraction = 0.1
-    max_h_level = ${my_num_adaptivity}
+    max_h_level = 3
   [../]
 []
-
 
 [Outputs]
   file_base = ./${my_filename}/out_${my_filename} 
