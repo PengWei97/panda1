@@ -88,7 +88,7 @@ my_end_time = 40000000
 [UserObjects]
   [./euler_angle_file]
     type = EulerAngleFileReader
-    file_name = grn_2_rand_2D.tex
+    file_name = grn_2_rand_2D.tex # 45
   [../]
   [./grain_tracker]
     type = GrainTrackerElasticity

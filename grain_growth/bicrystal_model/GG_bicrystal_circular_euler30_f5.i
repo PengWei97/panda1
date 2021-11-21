@@ -2,39 +2,30 @@
 #  1000*600,gr0 gr1 gr2
 #  add Stress component
 #  hcp
-# mpiexec -n 32 ~/projects/panda/panda-opt -i GG_bicrystal_circular_1_f5_nm_0708.i > GG_bicrystal_circular_1_f5_nm_0708.log
-# tar -cvf - out_GG_bicrystal_circular_1_f5_nm_Noadaptivity_results.e* | pigz -9 -p 10 > out_GG_bicrystal_circular_1_f5_nm_Noadaptivity_results.tgz
-# code GG_bicrystal_circular_1_f5_nm_0708.i
-
-# tar -cvf - Free2000_T_01.e-s??0 | pigz -9 -p 10 > Free2000_T_01_exodus.tgz
 
 my_GBmob0 = 2.5e-6
 my_length_scale = 1.0e-9
 my_time_scale = 1.0e-9 # miu s
 my_wGB = 15 # nm
-my_GBenergy = 0.0708
 my_T = 500
-my_filename = 'GG_bicrystal_circular_1_f5_nm_0708'
-my_number_adaptivity = 3
-my_displacement = 32 #25.0e2 # 10 10 2% 500*5%
+my_filename = 'GG_bicrystal_circular_2_euler30_f5_results'
+my_number_adaptivity = 8
+my_displacement = 3.2e3 # 5%
 # my_GBMobility = 1.0e-12 # m^4/(Js) 1.0e-10
-my_end_time = 4000
+my_end_time = 40000000
 # my_interval = 2 
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 256
-  ny = 256 
-  nz = 0
+  nx = 32
+  ny = 32
   xmin = 0
-  xmax = 64e1
+  xmax = 64e3
   ymin = 0
-  ymax = 64e1
-  zmin = 0
-  zmax = 0
+  ymax = 64e3
   elem_type = QUAD4
-
+  
   parallel_type = distributed
 []
 
@@ -49,55 +40,17 @@ my_end_time = 4000
   [./disp_x]
     order = FIRST
     family = LAGRANGE
-    # scaling = 1.0e4 #Scales residual to improve convergence 
   [../]
   [./disp_y]
     order = FIRST
     family = LAGRANGE
-    # scaling = 1.0e4 #Scales residual to improve convergence 
   [../]
 []
-
-[Bounds]
-  [./gr0_upper_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr0
-    bound_type = upper
-    bound_value = 1.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr0_lower_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr0
-    bound_type = lower
-    bound_value = 0.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr1_upper_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr1
-    bound_type = upper
-    bound_value = 1.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-  [./gr1_lower_bound]
-    type = ConstantBoundsAux
-    variable = bounds_dummy
-    bounded_variable = gr1
-    bound_type = lower
-    bound_value = 0.0
-    execute_on = 'INITIAL LINEAR NONLINEAR TIMESTEP_END TIMESTEP_BEGIN FINAL'
-  [../]
-[]
-
 
 [UserObjects]
   [./euler_angle_file]
     type = EulerAngleFileReader
-    file_name = grn_2_rand_2D.tex
+    file_name = grn_2_rand_2D.tex # 30
   [../]
   [./grain_tracker]
     type = GrainTrackerElasticity
@@ -117,9 +70,9 @@ my_end_time = 4000
 [ICs]
   [./PolycrystalICs]
     [./BicrystalCircleGrainIC]
-      radius = 25e1
-      x = 32e1
-      y = 32e1
+      radius = 20e3
+      x = 32e3
+      y = 32e3
       int_width = 15
     [../]
   [../]
@@ -135,6 +88,10 @@ my_end_time = 4000
     family = LAGRANGE
   [../]
   [./total_energy_density]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./grad_energy_density]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -162,14 +119,6 @@ my_end_time = 4000
     order = CONSTANT
     family = MONOMIAL
   [../]
-#   [./unique_grains]
-#     order = CONSTANT
-#     family = MONOMIAL
-#   [../]
-#   [./var_indices]
-#     order = CONSTANT
-#     family = MONOMIAL
-#   [../]
   [./vonmises_stress]
     order = CONSTANT
     family = MONOMIAL
@@ -253,20 +202,6 @@ my_end_time = 4000
     index_i = 1
     index_j = 1
   [../]
-#   [./unique_grains]
-#     type = FeatureFloodCountAux
-#     variable = unique_grains
-#     execute_on = timestep_end
-#     flood_counter = grain_tracker
-#     field_display = UNIQUE_REGION
-#   [../]
-#   [./var_indices]
-#     type = FeatureFloodCountAux
-#     variable = var_indices
-#     execute_on = timestep_end
-#     flood_counter = grain_tracker
-#     field_display = VARIABLE_COLORING
-#   [../]
   [./C1111]
     type = RankFourAux
     variable = C1111
@@ -330,12 +265,12 @@ my_end_time = 4000
     wGB = ${my_wGB} # nm
     GBmob0 = ${my_GBmob0} # m^4/(Js) from Schoenfelder 1997
     Q = 0.23 # Migration energy in eV
-    GBenergy = ${my_GBenergy} # GB energy in J/m^2
+    GBenergy = 0.708 # GB energy in J/m^2
     time_scale = ${my_time_scale}
     length_scale = ${my_length_scale}
     # GBMobility = ${my_GBMobility}
     outputs = my_exodus
-    output_properties = 'sigma M_GB l_GB mu'
+    output_properties = 'kappa_op L mu gamma_asymm sigma M_GB l_GB'
   [../]
   [./ElasticityTensor]
     type = ComputePolycrystalElasticityTensor
@@ -353,11 +288,6 @@ my_end_time = 4000
     type = ComputeLinearElasticStress
     block = 0
   [../]
-  # [./elasticenergy]
-  #   type = ElasticEnergyMaterial
-  #   args = 'gr1 gr0'
-	#   outputs = my_exodus
-  # [../]
   [./local_free_energy]
     type = DerivativeParsedMaterial
     f_name= f_chem
@@ -380,11 +310,6 @@ my_end_time = 4000
 []
 
 [Postprocessors]
-#   [./ngrains]
-#     type = FeatureFloodCount
-#     variable = bnds
-#     threshold = 0.7
-#   [../]
   [./dofs]
     type = NumDOFs
   [../]
@@ -400,15 +325,6 @@ my_end_time = 4000
     type = ElementIntegralVariablePostprocessor
     variable = gr0
   [../]
-  # [./F_elastic]
-  #   type = ElementIntegralMaterialProperty
-  #   mat_prop = f_elastic
-  # [../]
-  # [./F_chem]
-  #   type = ElementIntegralMaterialProperty
-  #   mat_prop = f_chem
-  #   outputs = csv
-  # [../]
 []
 
 # [Debug]
@@ -447,9 +363,9 @@ my_end_time = 4000
   [./Adaptivity]
     initial_adaptivity = ${my_number_adaptivity} # 8 
     cycles_per_step = 2 # The number of adaptivity cycles per step
-    refine_fraction = 0.8 # The fraction of elements or error to refine.
+    refine_fraction = 0.5 # The fraction of elements or error to refine.
     coarsen_fraction = 0.05
-    max_h_level = ${my_number_adaptivity}
+    max_h_level = 8
   [../]
 []
 
@@ -467,6 +383,13 @@ my_end_time = 4000
     # interval = ${my_interval} # The interval at which time steps are output
     # sync_times = '10 50 100 500 1000 5000 10000 50000 100000'
     # sync_only = true
+    interval = 10
+  [../]
+  [./my_console]
+    type = Console
+    output_linear = false
+    # output_screen = false
+    interval = 10
   [../]
   [./pgraph]
     type = PerfGraphOutput
