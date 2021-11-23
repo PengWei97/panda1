@@ -2,10 +2,10 @@
 # mkdir ../include/materials
 # mkdir ../src/materials
 
-cp ~/projects/moose/modules/tensor_mechanics/include/materials/FiniteStrainPlasticMaterial.h ~/projects/panda/include/materials/Test5FiniteStrainPlasticMaterial.h
+cp /home/pengwei/projects/panda/src/userobjects/TensorMechanicsHardeningLinear.C /home/pengwei/projects/panda/src/userobjects/Test1TensorMechanicsHardeningLinear.C
 
-cp ~/projects/moose/modules/tensor_mechanics/src/materials/FiniteStrainPlasticMaterial.C ~/projects/panda/src/materials/Test5FiniteStrainPlasticMaterial.C
+cp /home/pengwei/projects/panda/include/userobjects/TensorMechanicsHardeningLinear.h /home/pengwei/projects/panda/include/userobjects/Test1TensorMechanicsHardeningLinear.h
 
-code ~/projects/panda/include/materials/Test5FiniteStrainPlasticMaterial.h
-code ~/projects/panda/src/materials/Test5FiniteStrainPlasticMaterial.C
+code /home/pengwei/projects/panda/src/userobjects/Test1TensorMechanicsHardeningLinear.C
+code /home/pengwei/projects/panda/include/userobjects/Test1TensorMechanicsHardeningLinear.h
     

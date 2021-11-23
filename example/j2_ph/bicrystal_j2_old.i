@@ -444,3 +444,6 @@ my_yield_strength_init = 2e3
     heaviest_sections = 7         # Default is 0
   [../]
 []
+
+
+Zielinski, et al, Journal of Applied Physics, 1994.

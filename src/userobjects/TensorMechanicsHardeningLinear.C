@@ -19,8 +19,6 @@ TensorMechanicsHardeningLinear::validParams()
   params.addRequiredParam<Real>("value_0", "The yield strength when internal variable = 0");
   params.addRequiredParam<Real>("HardFactor", "The hardening factor");
   params.addClassDescription("Hardening defined by linear hardenig rule");
-  // params.addRequiredCoupledVarWithAutoBuild(
-  //     "v", "var_name_base", "op_num", "Array of coupled variables");
   return params;
 }
 

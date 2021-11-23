@@ -1,4 +1,4 @@
-my_filename = 'test03_j2Ph_02'
+my_filename = 'test03_j2Ph_03'
 my_xnum_element = 50
 my_ynum_element = 20
 my_xmax = 3e3
@@ -111,7 +111,15 @@ my_num_adaptivity = 3
     order = CONSTANT
     family = MONOMIAL
   [../]
+  [./elastic_strain_xx]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
   [./stress_yy]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
+  [./stress_xx]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -151,12 +159,26 @@ my_num_adaptivity = 3
     index_i = 1
     index_j = 1
   [../]
+  [./elastic_strain_xx]
+    type = RankTwoAux
+    rank_two_tensor = elastic_strain
+    variable = elastic_strain_xx
+    index_i = 0
+    index_j = 0
+  [../]
   [./stress_yy]
     type = RankTwoAux
     rank_two_tensor = stress
     variable = stress_yy
     index_i = 1
     index_j = 1
+  [../]
+  [./stress_xx]
+    type = RankTwoAux
+    rank_two_tensor = stress
+    variable = stress_xx
+    index_i = 0
+    index_j = 0
   [../]
   [./VMstress]
     type = MaterialRealAux
@@ -209,10 +231,20 @@ my_num_adaptivity = 3
     point = '0 0 0'
     variable = elastic_strain_yy
   [../]
+  [./epsilon_e_xx]
+    type = PointValue
+    point = '0 0 0'
+    variable = elastic_strain_xx
+  [../]
   [./sigma_yy]
     type = PointValue
     point = '0 0 0'
     variable = stress_yy
+  [../]
+  [./sigma_xx]
+    type = PointValue
+    point = '0 0 0'
+    variable = stress_xx
   [../]
   [./VMstress]
     type = PointValue
@@ -249,8 +281,8 @@ my_num_adaptivity = 3
 [UserObjects]
   [./str]
     type = TensorMechanicsHardeningLinear
-    value_0 = 2000 # MPa
-    HardFactor = ${my_HardFactor} # 30000.0 # MPa
+    value_0 = 2000 # MPa 
+    HardFactor = ${my_HardFactor} # 30000.0 # MPa gr0 
   [../]
   [./j2]
     type = GGTensorMechanicsPlasticJ2
@@ -321,6 +353,10 @@ my_num_adaptivity = 3
     GBenergy = 0.708 #GB energy in J/m^2
     time_scale = ${my_time_scale}
     length_scale = ${my_length_scale}
+  [../]
+  [./HardeningModel]
+    type = GGTensorMechanicsHardeningLinear
+    # grain_tracker = grain_tracker
   [../]
   [./ElasticityTensor]
     type = GGComputePolycrystalElasticityTensor
