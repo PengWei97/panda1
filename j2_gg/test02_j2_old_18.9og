@@ -1,0 +1,13 @@
+
+Setting Up
+  Finished Setting Mesh                                                                  [[33m  4.86 s[39m] [[33m  183 MB[39m]
+[36mThe following total 6 aux variables:
+  df_chem/dgr0
+  df_chem/dgr1
+  df_elastic/dgr0
+  df_elastic/dgr1
+  f_chem
+  f_elastic
+are added for automatic output by MaterialOutputAction.[39m
+[mpiexec@pwmoose-PowerEdge-T640] Sending Ctrl-C to processes as requested
+[mpiexec@pwmoose-PowerEdge-T640] Press Ctrl-C again to force abort

@@ -1,4 +1,6 @@
-.libs
+*.tgz
+*.tar.bz2
+*.libs
 *.la
 *.lo
 *.d
