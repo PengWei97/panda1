@@ -43,7 +43,6 @@ my_num_adaptivity = 3
 [GlobalParams]
   op_num = 2
   var_name_base = gr
-  displacements = 'disp_x disp_y'
 []
 
 [Variables]

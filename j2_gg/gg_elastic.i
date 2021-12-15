@@ -1,6 +1,6 @@
 # tar -cvf - ./test01_elastic/out_test01_elastic.e-s??[05] | pigz -9 -p 10 > out_test01_elastic.tgz
 
-my_filename = 'test01_elastic_05'
+
 # test01_elastic, 纯弹性加载(0.8*t)，双晶box模型,界面出现扰动;
 # test01_elastic_02, 纯弹性加载(5%, 50)，双晶box模型, 晶面没有出现不连续(disconnections), 界面宽度15
 # test01_elastic_03, 纯弹性加载(5%, 50)，双晶box模型,  界面宽度50, 使用置换网格在求力学弱形式中,晶面没有出现不连续(disconnections),
@@ -10,8 +10,10 @@ my_filename = 'test01_elastic_05'
 # my_function = '0.8*t' # 0.001s^{-1}
 
 # my_function = 'if(t<4,t,4+0.002*sin(t))' # 0.001s^{-1}
-my_function = 4 # 0.001s^{-1}
-# my_function = '50'
+
+my_filename = 'test01_elastic_07'
+my_function = 'if(t<4,t,4+0.0002*sin(10*pi*t))' # 0.001s^{-1}
+
 my_wGB = 15 #15
 my_num_adaptivity = 4
 
@@ -22,11 +24,18 @@ my_time_scale = 1.0e-9
 my_length_scale = 1.0e-9
 my_pressure_scale = 1.0e6
 
-my_xmax = 3.0e2
-my_ymax = 1.0e2
-my_radius = 1.0e2
-my_nx = 100
-my_ny = 20
+my_xmax = 3.0e2 # 3.0e3
+my_ymax = 1.0e2 # 1.0e3
+my_radius = 1.0e2 # 1.0e3
+my_nx = 200 #200 # 50
+my_ny = 50 #50 # 20
+
+[Functions]
+  [./timestep_fn]
+    type = ParsedFunction
+    value = 'if(t<4,0.2,5)'
+  [../]
+[]
 
 [Mesh]
   type = GeneratedMesh
@@ -167,7 +176,7 @@ my_ny = 20
   [../]
   [./elastic_stress11]
     type = RankTwoAux
-    variable = elastic_stress12
+    variable = elastic_stress11
     rank_two_tensor = stress
     index_i = 0
     index_j = 0
@@ -188,6 +197,12 @@ my_ny = 20
     index_i = 0
     index_j = 1
     execute_on = timestep_end
+  [../]
+  [./VMstress]
+    type = RankTwoScalarAux
+    rank_two_tensor = stress
+    scalar_type = VonMisesStress
+    variable = VMstress
   [../]
   [./C1111]
     type = RankFourAux
@@ -231,7 +246,7 @@ my_ny = 20
   [./y_anchor]
     type = DirichletBC
     variable = disp_y
-    boundary = bottom
+    boundary = 'bottom'
     value = 0.0
   [../]
 []
@@ -305,8 +320,9 @@ my_ny = 20
 
     euler_angle_provider = euler_angle_file
     fill_method = symmetric9
-    C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
+    # C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
 
+    C_ijkl = '1.684e5 1.214e5 1.214e5 1.684e5 1.214e5 1.684e5 0.75e5 0.75e5 0.75e5'
     outputs = none
   [../]
 []
@@ -336,6 +352,18 @@ my_ny = 20
     mat_prop = f_chem
     # outputs = csv
   [../]
+  [./epsilo22_av]
+    type = ElementAverageValue
+    variable = elastic_strain22
+  [../]
+  [./sigma22_av]
+    type = ElementAverageValue
+    variable = elastic_stress22
+  [../]
+  [./VMstress_av]
+    type = ElementAverageValue
+    variable = VMstress
+  [../]
 []
 
 [Preconditioning]
@@ -361,12 +389,18 @@ my_ny = 20
   end_time = ${my_end_time}
 
   [./TimeStepper]
-    type = IterationAdaptiveDT
-    dt = 1.5
-    growth_factor = 1.2
-    cutback_factor = 0.8
-    optimal_iterations = 8
+    type = FunctionDT
+    function = timestep_fn
+    min_dt = 0.1
   [../]
+
+  # [./TimeStepper]
+  #   type = IterationAdaptiveDT
+  #   dt = 1.5
+  #   growth_factor = 1.2
+  #   cutback_factor = 0.8
+  #   optimal_iterations = 8
+  # [../]
 
   # [./Adaptivity]
   #   initial_adaptivity = ${my_num_adaptivity}

@@ -1,4 +1,4 @@
-my_filename = 'test02_j2_old_007'
+my_filename = 'test02_j2_old_06'
 # my_function = 'if(t<40,t,40+0.02*sin(t))' # 0.001s^{-1}
 # my_function = 'if(t<4,t,4+0.0002*sin(10*pi*t))' # 0.001s^{-1}
 # my_function = 'if(t<4,0.1*t,0.1*4+0.002*sin(10*pi*t))' # 0.001s^{-1}
@@ -23,7 +23,7 @@ my_wGB = 15 # 8 for 002
 [Functions]
   [./timestep_fn]
     type = ParsedFunction
-    value = 'if(t<10,0.10,5)'
+    value = 'if(t<10,0.15,5)'
   [../]
 []
 
@@ -192,7 +192,7 @@ my_wGB = 15 # 8 for 002
     # use_displaced_mesh = true
     # add_variables = true
     # use_automatic_differentiation = true
-    strain = FINITE # SMALL # FINITE
+    strain = SMALL # SMALL # FINITE
     incremental = true
   [../]
 []

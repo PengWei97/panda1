@@ -31,12 +31,18 @@ public:
 protected:
   virtual void computeQpStress();
   virtual void initQpStatefulProperties();
+  // virtual void initJ2StatefulProperties();
+  MaterialProperty<Real> & _grain_boundary;
   std::vector<Real> _yield_stress_vector;
   const MaterialProperty<RankTwoTensor> & _elastic_strain_old;
   MaterialProperty<RankTwoTensor> & _plastic_strain;
   const MaterialProperty<RankTwoTensor> & _plastic_strain_old;
   MaterialProperty<Real> & _eqv_plastic_strain;
   const MaterialProperty<Real> & _eqv_plastic_strain_old;
+  // MaterialProperty<std::vector<Real>> & _eqv_plasticity_strain;
+  MaterialProperty<Real> & _eqven_plasticity_strain;
+  MaterialProperty<RealVectorValue> & _eqv_plastic_strain_op;
+  // const MaterialProperty<Real> & _eqv_plasticity_strain_old;
   /// The old stress tensor
   const MaterialProperty<RankTwoTensor> & _stress_old;
   const MaterialProperty<RankTwoTensor> & _strain_increment;
@@ -85,13 +91,16 @@ protected:
    * _rotation_increment.
    */
   virtual void returnMap(const RankTwoTensor & sig_old,
+                         Real & grain_boundary, 
                          const Real eqvpstrain_old,
+                        //  const Real eqvpTeststrain_old,
                          const RankTwoTensor & plastic_strain_old,
                          const RankTwoTensor & delta_d,
                          const RankTwoTensor & epsilon_total_old,
                          const RankFourTensor & E_ijkl,
                          RankTwoTensor & sig,
                          Real & eqvpstrain,
+                         Real & eqven_pstrain,
                          Real & hard_factor,
                          RankTwoTensor & plastic_strain);
 
@@ -155,4 +164,10 @@ protected:
   Real getdYieldStressdPlasticStrain(const Real equivalent_plastic_strain, const Real hf);
 
   void computeHardFactor();
+
+  void computeIntegral(Real & eqven_pstrain); // Real & eqv_pstrain,
+
+  // RealVectorValue computeIntegral();
+
+  // Real computerGBs();
 };
