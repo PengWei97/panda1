@@ -221,7 +221,7 @@
 
 
 [Outputs]
-  file_base = out
+  file_base = tensor_mechanics_j2plasticity/out
   exodus = true
   csv = true
 []
