@@ -1,20 +1,15 @@
-my_filename = 'test03_j2Ph_circular_5'
-
-# test03_j2Ph_circular_3 外面晶粒为45°，环晶长大
-# test03_j2Ph_circular_4 里面晶粒为45°，环晶长大, 晶粒缩小不明显
-# test03_j2Ph_circular_5 里面晶粒为45°，环晶长大，设置载荷为0
-my_xnum_element = 32
-my_ynum_element = 32
-my_xmax = 6.4e2
-my_ymax = 6.4e2
+my_filename = 'test03_j2Ph_03'
+my_xnum_element = 50
+my_ynum_element = 20
+my_xmax = 3e3
+my_ymax = 1e3
 # my_function = 't' # 0.001
-# my_function = 'if(t<40,0.64*t,25.6+0.02*sin(t))' # 0.001s^{-1} 4%
-my_function = '0' # 0.001s^{-1} 4%
+my_function = 'if(t<40,t,40+0.02*sin(t))' # 0.001s^{-1}
 my_end_time = 1.0e3
 my_HardFactor = 2e4 # 30000.0
 
-my_radus = 2.5e2
-my_point = 3.2e2
+my_radus = 1e3
+
 my_time_scale = 1.0e-9
 my_length_scale = 1.0e-9
 my_pressure_scale = 1.0e6
@@ -43,6 +38,7 @@ my_num_adaptivity = 3
 [GlobalParams]
   op_num = 2
   var_name_base = gr
+  displacements = 'disp_x disp_y'
 []
 
 [Variables]
@@ -56,11 +52,11 @@ my_num_adaptivity = 3
 
 [ICs]
   [./PolycrystalICs]
-    [./BicrystalCircleGrainIC]
-      radius = ${my_radus}
-      x = ${my_point}
-      y = ${my_point}
-      int_width = 15
+    [./BicrystalBoundingBoxIC]
+      x1 = 0
+      y1 = 0
+      x2 = ${my_radus}
+      y2 = ${my_ymax}   
     [../]
   [../]
 []
@@ -285,8 +281,8 @@ my_num_adaptivity = 3
 [UserObjects]
   [./str]
     type = TensorMechanicsHardeningLinear
-    value_0 = 2000 # MPa
-    HardFactor = ${my_HardFactor} # 30000.0 # MPa
+    value_0 = 2000 # MPa 
+    HardFactor = ${my_HardFactor} # 30000.0 # MPa gr0 
   [../]
   [./j2]
     type = GGTensorMechanicsPlasticJ2
@@ -297,7 +293,7 @@ my_num_adaptivity = 3
   [../]
   [./euler_angle_file]
     type = EulerAngleFileReader
-    file_name = Euler_circular.tex
+    file_name = test.tex
   [../]
   [./grain_tracker]
     type = GrainTrackerElasticity
@@ -358,10 +354,10 @@ my_num_adaptivity = 3
     time_scale = ${my_time_scale}
     length_scale = ${my_length_scale}
   [../]
-  # [./HardeningModel]
-  #   type = GGTensorMechanicsHardeningLinear
-  #   # grain_tracker = grain_tracker
-  # [../]
+  [./HardeningModel]
+    type = GGTensorMechanicsHardeningLinear
+    # grain_tracker = grain_tracker
+  [../]
   [./ElasticityTensor]
     type = GGComputePolycrystalElasticityTensor
     grain_tracker = grain_tracker

@@ -129,7 +129,7 @@ my_ny = 50 #50 # 20
     # displacements = 'disp_x disp_y'
     use_displaced_mesh = true
     strain = SMALL # FINITE
-    incremental = true
+    # incremental = true
   [../]
 []
 
@@ -142,6 +142,18 @@ my_ny = 50 #50 # 20
   #   displacements = 'disp_x disp_y'
   #   use_displaced_mesh = true
   # [../]
+  [./AC_ElasticDrivingForce_gr0]
+    type = ACGrGrElasticDrivingForce
+    D_tensor_name = delasticity_tensor/dgr0
+    variable = gr0
+    # D_stress = _D_elastic_tensor[_qp] * strain;
+  [../]
+  [./AC_ElasticDrivingForce_gr1]
+    type = ACGrGrElasticDrivingForce
+    variable = gr1
+    D_tensor_name = delasticity_tensor/dgr1
+    # D_stress = _D_elastic_tensor[_qp] * strain;
+  [../]
 []
 
 [AuxKernels]

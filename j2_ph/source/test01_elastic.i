@@ -1,41 +1,21 @@
-# tar -cvf - ./test01_elastic/out_test01_elastic.e-s??[05] | pigz -9 -p 10 > out_test01_elastic.tgz
-
-
-# test01_elastic, 纯弹性加载(0.8*t)，双晶box模型,界面出现扰动;
-# test01_elastic_02, 纯弹性加载(5%, 50)，双晶box模型, 晶面没有出现不连续(disconnections), 界面宽度15
-# test01_elastic_03, 纯弹性加载(5%, 50)，双晶box模型,  界面宽度50, 使用置换网格在求力学弱形式中,晶面没有出现不连续(disconnections),
-# test01_elastic_04: 使用'if(t<40,t,40+0.02*sin(t))', ComputeIncrementalSmallStrain--ComputeFiniteStrainElasticStress, 力学-相场界面同时移动
-# test01_elastic_05: 基于04,直接加入载荷4
-# my_function = 'if(t<6,10*t,60+0.01*sin(t))' # 0.001s^{-1}
-# my_function = '0.8*t' # 0.001s^{-1}
-
-# my_function = 'if(t<4,t,4+0.002*sin(t))' # 0.001s^{-1}
-
-my_filename = 'test01_elastic_07'
-my_function = 'if(t<4,t,4+0.0002*sin(10*pi*t))' # 0.001s^{-1}
-
-my_wGB = 15 #15
+my_filename = 'test01_elastic_04'
+my_function = 'if(t<20,t,20+0.02*sin(t))' # 0.001s^{-1}
+# my_function = 't' # 0.001s^{-1}
+my_wGB = 15
 my_num_adaptivity = 4
 
 my_interval = 2
-my_end_time = 1e3
 
+my_end_time = 1000
 my_time_scale = 1.0e-9
 my_length_scale = 1.0e-9
 my_pressure_scale = 1.0e6
 
-my_xmax = 3.0e2 # 3.0e3
-my_ymax = 1.0e2 # 1.0e3
-my_radius = 1.0e2 # 1.0e3
-my_nx = 200 #200 # 50
-my_ny = 50 #50 # 20
-
-[Functions]
-  [./timestep_fn]
-    type = ParsedFunction
-    value = 'if(t<4,0.2,5)'
-  [../]
-[]
+my_xmax = 3e3
+my_ymax = 1e3
+my_radius = 1.0e3
+my_nx = 50
+my_ny = 20
 
 [Mesh]
   type = GeneratedMesh
@@ -45,12 +25,12 @@ my_ny = 50 #50 # 20
   xmax = ${my_xmax}
   ymax = ${my_ymax}
   elem_type = QUAD4
+
 []
 
 [GlobalParams]
   op_num = 2
   var_name_base = gr
-  displacements = 'disp_x disp_y'
 []
 
 [Variables]
@@ -124,24 +104,14 @@ my_ny = 50 #50 # 20
   [../]
 []
 
-[Modules/TensorMechanics/Master]
-  [./all]
-    # displacements = 'disp_x disp_y'
-    use_displaced_mesh = true
-    strain = SMALL # FINITE
-    incremental = true
-  [../]
-[]
-
 [Kernels]
   [./PolycrystalKernel]
   [../]
   [./PolycrystalElasticDrivingForce]
   [../]
-  # [./TensorMechanics]
-  #   displacements = 'disp_x disp_y'
-  #   use_displaced_mesh = true
-  # [../]
+  [./TensorMechanics]
+    displacements = 'disp_x disp_y'
+  [../]
 []
 
 [AuxKernels]
@@ -198,11 +168,12 @@ my_ny = 50 #50 # 20
     index_j = 1
     execute_on = timestep_end
   [../]
-  [./VMstress]
+  [./vonmises_stress]
     type = RankTwoScalarAux
+    variable = VMstress
     rank_two_tensor = stress
     scalar_type = VonMisesStress
-    variable = VMstress
+    execute_on = timestep_end
   [../]
   [./C1111]
     type = RankFourAux
@@ -246,12 +217,10 @@ my_ny = 50 #50 # 20
   [./y_anchor]
     type = DirichletBC
     variable = disp_y
-    boundary = 'bottom'
+    boundary = bottom
     value = 0.0
   [../]
 []
-
-
 
 [Materials]
   [./Copper]
@@ -273,15 +242,15 @@ my_ny = 50 #50 # 20
     length_scale = ${my_length_scale}
     pressure_scale = ${my_pressure_scale}
   [../]
+  [./strain]
+    type = ComputeSmallStrain
+    block = 0
+    displacements = 'disp_x disp_y'
+  [../]
   [./stress]
-    type = ComputeFiniteStrainElasticStress # ComputeLinearElasticStress
+    type = ComputeLinearElasticStress
     block = 0
   [../]
-  # [./strain]
-  #   type = ComputeSmallStrain
-  #   block = 0
-  #   displacements = 'disp_x disp_y'
-  # [../]
   [./local_free_energy]
     type = DerivativeParsedMaterial
     f_name= f_chem
@@ -320,9 +289,8 @@ my_ny = 50 #50 # 20
 
     euler_angle_provider = euler_angle_file
     fill_method = symmetric9
-    # C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
+    C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
 
-    C_ijkl = '1.684e5 1.214e5 1.214e5 1.684e5 1.214e5 1.684e5 0.75e5 0.75e5 0.75e5'
     outputs = none
   [../]
 []
@@ -343,6 +311,18 @@ my_ny = 50 #50 # 20
     type = ElementIntegralVariablePostprocessor
     variable = gr0
   [../]
+  [./strain_yy]
+    type = ElementAverageValue
+    variable = elastic_strain22
+  [../]
+  [./stress_yy]
+    type = ElementAverageValue
+    variable = elastic_stress22
+  [../]
+  [./VMstress]
+    type = ElementAverageValue
+    variable = VMstress
+  [../]
   [./F_elastic]
     type = ElementIntegralMaterialProperty
     mat_prop = f_elastic
@@ -351,18 +331,6 @@ my_ny = 50 #50 # 20
     type = ElementIntegralMaterialProperty
     mat_prop = f_chem
     # outputs = csv
-  [../]
-  [./epsilo22_av]
-    type = ElementAverageValue
-    variable = elastic_strain22
-  [../]
-  [./sigma22_av]
-    type = ElementAverageValue
-    variable = elastic_stress22
-  [../]
-  [./VMstress_av]
-    type = ElementAverageValue
-    variable = VMstress
   [../]
 []
 
@@ -389,25 +357,19 @@ my_ny = 50 #50 # 20
   end_time = ${my_end_time}
 
   [./TimeStepper]
-    type = FunctionDT
-    function = timestep_fn
-    min_dt = 0.1
+    type = IterationAdaptiveDT
+    dt = 1.5
+    growth_factor = 1.2
+    cutback_factor = 0.8
+    optimal_iterations = 8
   [../]
 
-  # [./TimeStepper]
-  #   type = IterationAdaptiveDT
-  #   dt = 1.5
-  #   growth_factor = 1.2
-  #   cutback_factor = 0.8
-  #   optimal_iterations = 8
-  # [../]
-
-  # [./Adaptivity]
-  #   initial_adaptivity = ${my_num_adaptivity}
-  #   refine_fraction = 0.7
-  #   coarsen_fraction = 0.1
-  #   max_h_level = ${my_num_adaptivity}
-  # [../]
+  [./Adaptivity]
+    initial_adaptivity = ${my_num_adaptivity}
+    refine_fraction = 0.7
+    coarsen_fraction = 0.1
+    max_h_level = ${my_num_adaptivity}
+  [../]
 []
 
 [Outputs]
@@ -418,7 +380,6 @@ my_ny = 50 #50 # 20
     interval = ${my_interval} # The interval at which time steps are output
     # sync_times = '10 50 100 500 1000 5000 10000 50000 100000'
     # sync_only = true
-    sequence = true
   [../]
   [./pgraph]
     type = PerfGraphOutput

@@ -1,25 +1,23 @@
-my_filename = 'test03_j2Ph_circular_5'
-
-# test03_j2Ph_circular_3 外面晶粒为45°，环晶长大
-# test03_j2Ph_circular_4 里面晶粒为45°，环晶长大, 晶粒缩小不明显
-# test03_j2Ph_circular_5 里面晶粒为45°，环晶长大，设置载荷为0
-my_xnum_element = 32
-my_ynum_element = 32
-my_xmax = 6.4e2
-my_ymax = 6.4e2
+my_filename = 'test04_j2Ph_01'
+my_xnum_element = 50
+my_ynum_element = 20
+my_xmax = 3e3
+my_ymax = 1e3
 # my_function = 't' # 0.001
-# my_function = 'if(t<40,0.64*t,25.6+0.02*sin(t))' # 0.001s^{-1} 4%
-my_function = '0' # 0.001s^{-1} 4%
+my_function = 'if(t<40,t,40+0.02*sin(t))' # 0.001s^{-1}
 my_end_time = 1.0e3
-my_HardFactor = 2e4 # 30000.0
+# my_HardFactor = 2e4 # 30000.0
 
-my_radus = 2.5e2
-my_point = 3.2e2
+my_radus = 1e3
+
 my_time_scale = 1.0e-9
 my_length_scale = 1.0e-9
 my_pressure_scale = 1.0e6
 
 my_num_adaptivity = 3
+
+my_yield_strength_init = 2e3
+
 [Mesh]
   displacements = 'disp_x disp_y'
   [./generated_mesh]
@@ -43,6 +41,7 @@ my_num_adaptivity = 3
 [GlobalParams]
   op_num = 2
   var_name_base = gr
+  displacements = 'disp_x disp_y'
 []
 
 [Variables]
@@ -56,11 +55,11 @@ my_num_adaptivity = 3
 
 [ICs]
   [./PolycrystalICs]
-    [./BicrystalCircleGrainIC]
-      radius = ${my_radus}
-      x = ${my_point}
-      y = ${my_point}
-      int_width = 15
+    [./BicrystalBoundingBoxIC]
+      x1 = 0
+      y1 = 0
+      x2 = ${my_radus}
+      y2 = ${my_ymax}   
     [../]
   [../]
 []
@@ -115,15 +114,7 @@ my_num_adaptivity = 3
     order = CONSTANT
     family = MONOMIAL
   [../]
-  [./elastic_strain_xx]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
   [./stress_yy]
-    order = CONSTANT
-    family = MONOMIAL
-  [../]
-  [./stress_xx]
     order = CONSTANT
     family = MONOMIAL
   [../]
@@ -163,26 +154,12 @@ my_num_adaptivity = 3
     index_i = 1
     index_j = 1
   [../]
-  [./elastic_strain_xx]
-    type = RankTwoAux
-    rank_two_tensor = elastic_strain
-    variable = elastic_strain_xx
-    index_i = 0
-    index_j = 0
-  [../]
   [./stress_yy]
     type = RankTwoAux
     rank_two_tensor = stress
     variable = stress_yy
     index_i = 1
     index_j = 1
-  [../]
-  [./stress_xx]
-    type = RankTwoAux
-    rank_two_tensor = stress
-    variable = stress_xx
-    index_i = 0
-    index_j = 0
   [../]
   [./VMstress]
     type = MaterialRealAux
@@ -235,20 +212,10 @@ my_num_adaptivity = 3
     point = '0 0 0'
     variable = elastic_strain_yy
   [../]
-  [./epsilon_e_xx]
-    type = PointValue
-    point = '0 0 0'
-    variable = elastic_strain_xx
-  [../]
   [./sigma_yy]
     type = PointValue
     point = '0 0 0'
     variable = stress_yy
-  [../]
-  [./sigma_xx]
-    type = PointValue
-    point = '0 0 0'
-    variable = stress_xx
   [../]
   [./VMstress]
     type = PointValue
@@ -283,21 +250,21 @@ my_num_adaptivity = 3
 []
 
 [UserObjects]
-  [./str]
-    type = TensorMechanicsHardeningLinear
-    value_0 = 2000 # MPa
-    HardFactor = ${my_HardFactor} # 30000.0 # MPa
-  [../]
-  [./j2]
-    type = GGTensorMechanicsPlasticJ2
-    yield_strength = str
-    yield_function_tolerance = 1E-5
-    internal_constraint_tolerance = 1E-9
-    max_iterations = 10
-  [../]
+  # [./str]
+  #   type = TensorMechanicsHardeningLinear
+  #   value_0 = 2000 # MPa
+  #   HardFactor = ${my_HardFactor} # 30000.0 # MPa
+  # [../]
+  # [./j2]
+  #   type = GGTensorMechanicsPlasticJ2
+  #   yield_strength = str
+  #   yield_function_tolerance = 1E-5
+  #   internal_constraint_tolerance = 1E-9
+  #   max_iterations = 10
+  # [../]
   [./euler_angle_file]
     type = EulerAngleFileReader
-    file_name = Euler_circular.tex
+    file_name = test.tex
   [../]
   [./grain_tracker]
     type = GrainTrackerElasticity
@@ -335,17 +302,30 @@ my_num_adaptivity = 3
 []
 
 [Materials]
-  [./mc]
-    type = GGComputeMultiPlasticityStress
+  # [./mc]
+  #   type = GGComputeMultiPlasticityStress
+  #   block = 0
+  #   ep_plastic_tolerance = 1E-9
+  #   plastic_models = j2
+  #   debug_fspb = crash
+  #   # tangent_operator = elastic
+  #   # perform_finite_strain_rotations = false
+  #   # plastic_strain, plastic_internal_parameter, 
+  #   # plastic_yield_function
+  #   # total_strain, stress, elastic_strain
+  # [../]
+  [./fplastic]
+    type = Test4FiniteStrainPlasticMaterial #设置屈服函数
+    # implements rate-independent associative J2 plasticity 
+    # with isotropic hardening in the finite-strain framework.
     block = 0
-    ep_plastic_tolerance = 1E-9
-    plastic_models = j2
-    debug_fspb = crash
-    # tangent_operator = elastic
-    # perform_finite_strain_rotations = false
-    # plastic_strain, plastic_internal_parameter, 
-    # plastic_yield_function
-    # total_strain, stress, elastic_strain
+    grain_tracker = grain_tracker
+    yield_stress='0. 700. 0.05 700. 0.1 700. 0.38 700. 0.95 700. 2. 700.'
+    outputs = my_exodus
+    output_properties = 'dhard_factor/dgr0 dhard_factor/dgr1'
+    length_scale = ${my_length_scale}
+    pressure_scale = ${my_pressure_scale}
+    yield_strength_init = ${my_yield_strength_init}
   [../]
   [./Copper]
     type = GBEvolution
@@ -358,10 +338,6 @@ my_num_adaptivity = 3
     time_scale = ${my_time_scale}
     length_scale = ${my_length_scale}
   [../]
-  # [./HardeningModel]
-  #   type = GGTensorMechanicsHardeningLinear
-  #   # grain_tracker = grain_tracker
-  # [../]
   [./ElasticityTensor]
     type = GGComputePolycrystalElasticityTensor
     grain_tracker = grain_tracker

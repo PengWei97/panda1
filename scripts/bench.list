@@ -1,0 +1,16 @@
+[benchmarks]
+    [./bicrystal_benchmark_25]
+        binary = /home/pengwei/projects/panda/panda-opt
+        input = /home/pengwei/projects/panda/pengweiAGG/bicrystal/bicrystal_benchmark.i
+        cli_args = 'Mesh/uniform_refine=0'
+        min_runs = 15 # default 40
+        max_runs = 30 # default 400
+    [../]
+    [./bicrystal_benchmark_50]
+        binary = /home/pengwei/projects/panda/panda-opt
+        input = /home/pengwei/projects/panda/pengweiAGG/bicrystal/bicrystal_benchmark.i
+        cli_args = 'Mesh/uniform_refine=1'
+        min_runs = 15 # default 40
+        max_runs = 30 # default 400
+    [../]
+[]
