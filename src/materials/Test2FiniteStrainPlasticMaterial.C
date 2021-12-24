@@ -567,13 +567,13 @@ Test2FiniteStrainPlasticMaterial::computeIntegral(Real & eqven_pstrain) // Real 
   // std::vector<Real> average(2, 0);
   // RealVectorValue average;
   // _real_vec_prop[_qp](0) = 6;
-  if (_grain_boundary[_qp] <= 0.60)
-    {
-      eqven_pstrain = 0.0;
-      // eqven_pstrain += _eqv_plasticity_strain[_qp](op_index)*hh;
-      // sum_hh += hh;
-      // _eqv_plasticity_strain[_qp] = 0;
-    }    
+  // if (_grain_boundary[_qp] <= 0.60)
+  //   {
+  //     eqven_pstrain = 0.0;
+  //     eqven_pstrain += _eqv_plasticity_strain[_qp](op_index)*hh;
+  //     sum_hh += hh;
+  //     _eqv_plasticity_strain[_qp] = 0;
+  //   }    
   for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index) // 遍历 gr0 gr1
   {   
     Real hh = (1.0 + std::sin(libMesh::pi * ((*_vals[op_index])[_qp] - 0.5))) / 2.0; // 插值函数

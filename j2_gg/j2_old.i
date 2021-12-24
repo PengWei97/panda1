@@ -1,17 +1,17 @@
-my_filename = 'test02_j2_old_06'
+my_filename = 'test02_'
 # my_function = 'if(t<40,t,40+0.02*sin(t))' # 0.001s^{-1}
 # my_function = 'if(t<4,t,4+0.0002*sin(10*pi*t))' # 0.001s^{-1}
 # my_function = 'if(t<4,0.1*t,0.1*4+0.002*sin(10*pi*t))' # 0.001s^{-1}
-my_function = 'if(t<10,t,10+0.02*sin(10*pi*t))' # 0.001s^{-1}
-my_end_time = 600 #60 #4e2
+my_function = 'if(t<4,t,4+0.02*sin(10*pi*t))' # 0.001s^{-1}
+my_end_time = 300 #60 #4e2
 # my_yield_0 = 700 # MPa
 
 my_xmax = 30.0e1 # 3.0e3 30.0 #
 my_ymax = 10.0e1 # 1.0e3 10.0 #
 
 my_radius = 100.0 #10.0e1 # 1.0e3
-my_nx = 300 # 200 # 200 # 50
-my_ny = 100 # 50 # 50 # 20
+my_nx = 200 # 200 # 200 # 50
+my_ny = 50 # 50 # 50 # 20
 
 my_time_scale = 1.0e-9
 my_length_scale = 1.0e-9
