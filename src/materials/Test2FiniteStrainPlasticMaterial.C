@@ -9,6 +9,7 @@
 
 #include "Test2FiniteStrainPlasticMaterial.h"
 #include "libmesh/utility.h"
+#include "UserObject.h"
 
 registerMooseObject("TensorMechanicsApp", Test2FiniteStrainPlasticMaterial);
 
@@ -271,21 +272,23 @@ Test2FiniteStrainPlasticMaterial::returnMap(const RankTwoTensor & sig_old,
   eqvpstrain = eqvpstrain_old;
   // eqvpTeststrain = eqvpstrain; //eqvpTeststrain_old;
 
-  computeHardFactor();
+  
 
   plastic_strain = plastic_strain_old;
+
+  computeHardFactor(eqvpstrain,plastic_strain);
   // eqven_pstrain = eqvpstrain;
-  computeIntegral(eqven_pstrain);
+  // computeIntegral(hard_factor);
 
   // eqvpstrain = eqven_pstrain;
 
-  // if(grain_boundary >=0.45 && grain_boundary <=0.6)
+  // if(grain_boundary >=0.45 && grain_boundary <=0.6 && )
   // {
   //   // eqvpTeststrain = 0.0;
   //   eqvpstrain = 0.0;
   //   // plastic_strain.zero();
   // }
-  // if(grain_boundary <= 0.6)
+  // if(grain_boundary <= 0.6 && grain_boundary <=)
   // {
   //   // Real 
   //   eqvpstrain = 0.0;
@@ -516,7 +519,7 @@ Test2FiniteStrainPlasticMaterial::getdYieldStressdPlasticStrain(const Real eqpe,
 }
 
 void
-Test2FiniteStrainPlasticMaterial::computeHardFactor()
+Test2FiniteStrainPlasticMaterial::computeHardFactor(Real & eqvpstrain,RankTwoTensor & plastic_strain)
 {
   // Get list of active order parameters from grain tracker
   const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
@@ -544,10 +547,11 @@ Test2FiniteStrainPlasticMaterial::computeHardFactor()
     _grain_boundary[_qp] += (*_vals[op_index])[_qp]*(*_vals[op_index])[_qp];
   }
   
-  // if (_grain_boundary[_qp] >=0.47 && _grain_boundary[_qp] <= 0.60)
-  // {
-  //   _eqv_plasticity_strain[_qp] = 0;
-  // }
+  if (_grain_boundary[_qp] >=0.47 && (*_vals[0])[_qp] >= 0.50) // 
+  {
+    eqvpstrain = 0;
+    plastic_strain.zero();
+  }
 
   const Real tol = 1.0e-10;
   sum_h = std::max(sum_h, tol);
@@ -555,7 +559,65 @@ Test2FiniteStrainPlasticMaterial::computeHardFactor()
 }
 
 
+// // std::vector<Real> 
+// void
+// Test2FiniteStrainPlasticMaterial::computeIntegral(Real & eqven_pstrain) // Real & eqv_pstrain, 
+// {
+//   const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
+//   std::vector<Real> sum(2, 0); // 定义2个整数型元素的向量,且给出每个元素的初值为0
+//   std::vector<Real> area(2, 0); // 
+//   Real sum_hh = 0.0;
+//   // Real eqv_strain = 0.0;
+//   // std::vector<Real> average(2, 0);
+//   // RealVectorValue average;
+//   // _real_vec_prop[_qp](0) = 6;
+//   _eqv_plastic_strain_op[_qp] = {0.0,0.0};
+//   // if (_grain_boundary[_qp] <= 0.60)
+//   //   {
+//   //     eqven_pstrain = 0.0;
+//   //     eqven_pstrain += _eqv_plasticity_strain[_qp](op_index)*hh;
+//   //     sum_hh += hh;
+//   //     _eqv_plasticity_strain[_qp] = 0;
+//   //   }    
+//   for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index) // 遍历 gr0 gr1
+//   {   
+//     Real hh = (1.0 + std::sin(libMesh::pi * ((*_vals[op_index])[_qp] - 0.5))) / 2.0; // 插值函数
+
+//     for (int qp = 0; qp < _qrule->n_points(); qp++)
+//     {
+//       Real h = (1.0 + std::sin(libMesh::pi * ((*_vals[op_index])[qp] - 0.5))) / 2.0; // 插值函数
+//       sum[op_index] += _JxW[qp] * _coord[qp] * _eqv_plastic_strain[qp] * h; // 计算对于每个序参数gr_i每个网格上的等效塑性应变比重，$\sum_{i = 1}^{N}{h(\eta_i)\bar{\varepsilon}^p}$ 
+//       area[op_index] += _JxW[qp] * _coord[qp] * h; // 每个序参数所占据的总面积； A(gr0) gr(gr1)
+//     }
+
+//     // _eqv_plastic_strain_op[_qp](op_index) = sum[op_index]/area[op_index]; // 每个晶粒内的平均等效塑性应变
+
+//     eqven_pstrain += _eqv_plastic_strain_op[_qp](op_index)*hh; // 计算加权后的等效应变
+//     sum_hh += hh;
+//     // _eqv_plasticity_strain[op_index][qp] = sum[op_index]/area[op_index];
+//     // if (_grain_boundary[_qp] <= 0.60)
+//     // {
+//     //   // eqven_pstrain = 0.0;
+//     //   eqven_pstrain += _eqv_plasticity_strain[_qp](op_index)*hh;
+//     //   sum_hh += hh;
+//     //   // _eqv_plasticity_strain[_qp] = 0;
+//     // }    
+//   }
+//   _eqv_plastic_strain_op[_qp](0) = sum[0]/area[0];
+//   _eqv_plastic_strain_op[_qp](1) = sum[1]/area[1];
+//   const Real tol = 1.0e-10;
+//   sum_hh = std::max(sum_hh,tol);
+//   eqven_pstrain /= sum_hh; // 计算加权后的等效应变
+//   eqven_pstrain = 0.0;
+//   // _eqv_plastic_strain_op[_qp] = {0.0,10.0};
+//   // _eqv_plasticity_strain[]
+//   // return average;
+//   // eqv_pstrain = _eqv_plasticity_strain[_qp](1)*(*_vals[1])[_qp]+_eqv_plasticity_strain[_qp](1)*(*_vals[2])[_qp];
+// }
+
+
 // std::vector<Real> 
+<<<<<<< HEAD
 void
 Test2FiniteStrainPlasticMaterial::computeIntegral(Real & eqven_pstrain) // Real & eqv_pstrain, 
 {
@@ -584,25 +646,67 @@ Test2FiniteStrainPlasticMaterial::computeIntegral(Real & eqven_pstrain) // Real 
       sum[op_index] += _JxW[qp] * _coord[qp] * _eqv_plastic_strain[qp] * h; // 计算对于每个序参数gr_i每个网格上的等效塑性应变比重，$\sum_{i = 1}^{N}{h(\eta_i)\bar{\varepsilon}^p}$ 
       area[op_index] += _JxW[qp] * _coord[qp] * h; // 每个序参数所占据的总面积；
     }
+=======
+// void
+// Test2FiniteStrainPlasticMaterial::computeIntegral(Real & material_property) // Real & eqv_pstrain, 
+// {
+//   const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
+//   std::vector<Real> sum(2, 0); // 定义2个整数型元素的向量,且给出每个元素的初值为0
+//   std::vector<Real> area(2, 0); // 定义2个整数型元素的向量,且给出每个元素的初值为0
+//   Real sum_hh = 0.0; 
+//   Real average = 0.0;
+//   Real value = 1.0;
 
-    _eqv_plastic_strain_op[_qp](op_index) = sum[op_index]/area[op_index]; // 每个晶粒内的平均等效塑性应变
+//   _eqv_plastic_strain_op[_qp] = {0.0,0.0};
 
-    eqven_pstrain += _eqv_plastic_strain_op[_qp](op_index)*hh; // 计算加权后的等效应变
-    sum_hh += hh;
-    // _eqv_plasticity_strain[op_index][qp] = sum[op_index]/area[op_index];
-    // if (_grain_boundary[_qp] <= 0.60)
-    // {
-    //   // eqven_pstrain = 0.0;
-    //   eqven_pstrain += _eqv_plasticity_strain[_qp](op_index)*hh;
-    //   sum_hh += hh;
-    //   // _eqv_plasticity_strain[_qp] = 0;
-    // }    
-  }
+//   // for (unsigned int op_index = 0; op_index < 2 ; ++op_index) // 0 1
+//   // {   
+//     unsigned int op_index = 0;
+//     unsigned int size = _hard_factor.size();
+//     for (unsigned int qp = 0; qp < _qrule->n_points(); qp++) // _qrule->n_points()--四节点单元网格
+//     {
+//       // Real h = (1.0 + std::sin(libMesh::pi * ((*_vals[op_index])[qp] - 0.5))) / 2.0; // 插值函数
+//       // sum[op_index] += _JxW[qp] * _coord[qp] * _eqv_plastic_strain[qp] * h; // 计算对于每个序参数gr_i每个网格上的等效塑性应变比重，$\sum_{i = 1}^{N}{h(\eta_i)\bar{\varepsilon}^p}$ 
+//       sum[op_index] += _JxW[qp] * _coord[qp] * value; //computeQpIntegral(); //  // _hard_factor[qp]; // 计算对于每个序参数gr_i每个网格上的等效塑性应变比重，$\sum_{i = 1}^{N}{h(\eta_i)\bar{\varepsilon}^p}$ 
+//       // std::cout << "material_property = " << material_property << std::endl;
+//       // std::cout << "sum[0] = " << sum[op_index] << std::endl;
+//       area[op_index] += _JxW[qp] * _coord[qp]; //_coord[qp]; //* h _JxW[qp]* ; // 4, 每个序参数所占据的总面积； A(gr0) gr(gr1)
+//       // std::cout << "area[0] = " << area[op_index] << std::endl;
 
-  const Real tol = 1.0e-10;
-  sum_hh = std::max(sum_hh,tol);
-  eqven_pstrain /= sum_hh; // 计算加权后的等效应变
-  // _eqv_plasticity_strain[]
-  // return average;
-  // eqv_pstrain = _eqv_plasticity_strain[_qp](1)*(*_vals[1])[_qp]+_eqv_plasticity_strain[_qp](1)*(*_vals[2])[_qp];
-}
+//       // _JxW[qp] = 0.03;
+//       // _coord[qp] = 1;
+//       // _qrule->n_points() = 4;
+//     }
+
+    // _volume += this->_current_elem_volume; // 计算所的体积
+
+    // _communicator.sum(area[op_index]);
+    // std::cout << "area = " << area[0] << std::endl;
+    // _communicator.sum(sum[op_index]);
+
+    // std::cout << "sum[" << op_index << "] = " << sum[op_index];
+    // std::cout << ", area[" << op_index << "] = " << area[op_index] << std::endl;
+    // std::cout << ", size = " << size << std::endl;
+    // std::cout << ", volume = " << _volume << std::endl;
+    // _eqv_plastic_strain_op[_qp](op_index) = sum[op_index]/area[op_index]; // 每个晶粒内的平均等效塑性应变 
+  // }
+    // average = sum[0]/area[0];
+    // std::cout << "average = " << average << std::endl;
+  // _eqv_plastic_strain_op[_qp](1) = sum[1]/area[1];
+>>>>>>> 44cc8e023973ccf6c4a443a690178e26204a8d48
+
+    // eqven_pstrain = 0.0;
+// }
+
+// Real
+// Test2FiniteStrainPlasticMaterial::computeQpIntegral()
+// {
+//   return MetaPhysicL::raw_value(_hard_factor[_qp]);
+// }
+
+// Real
+// Test2FiniteStrainPlasticMaterial::getValue(Real & _integral_value)
+// {
+//   gatherSum(_integral_value);
+//   return _integral_value;
+// }

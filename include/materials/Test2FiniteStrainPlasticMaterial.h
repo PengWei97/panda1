@@ -28,6 +28,8 @@ public:
 
   Test2FiniteStrainPlasticMaterial(const InputParameters & parameters);
 
+  // virtual Real getValue(Real & _integral_value);
+
 protected:
   virtual void computeQpStress();
   virtual void initQpStatefulProperties();
@@ -163,11 +165,18 @@ protected:
    */
   Real getdYieldStressdPlasticStrain(const Real equivalent_plastic_strain, const Real hf);
 
-  void computeHardFactor();
+  void computeHardFactor(Real & eqvpstrain,RankTwoTensor & plastic_strain);
 
-  void computeIntegral(Real & eqven_pstrain); // Real & eqv_pstrain,
+  // void computeIntegral(Real & material_property); // Real & eqv_pstrain,
 
-  // RealVectorValue computeIntegral();
+  // // Real computeQpIntegral(); // Real & eqv_pstrain,
 
-  // Real computerGBs();
+  // // RealVectorValue computeIntegral();
+
+  // // Real computerGBs();
+  // template <typename T>
+  // void gatherSum(T & value)
+  // {
+  //   _communicator.sum(value);
+  // }
 };

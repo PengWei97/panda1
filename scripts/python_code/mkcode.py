@@ -16,7 +16,10 @@ code ~/projects/panda/src/%s/%s.C
         f.write(shfile)
     f.close()
 
-writesh( "materials", "ComputeLinearElasticStress","ComputeIncrementalLinearElasticStress", 1, 1, "4.sh")
+writesh( "postprocessors", "AverageNodalVariableValue","AverageNodalVariableValueOP", 1, 1, "4.sh")
 # E:\Github\moose\modules\phase_field\include\kernels\ACGrGrElasticDrivingForce.h
 # E:\Github\moose\modules\phase_field\include\materials\ElasticEnergyMaterial.h
 # E:\Github\moose\modules\tensor_mechanics\include\materials\ComputeLinearElasticStress.h
+
+# mkdir ~/projects/panda/src/postprocessors
+# mkdir ~/projects/panda/include/postprocessors

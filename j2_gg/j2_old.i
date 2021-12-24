@@ -1,29 +1,29 @@
-my_filename = 'test02_'
+my_filename = 'test02_12_VTK'
 # my_function = 'if(t<40,t,40+0.02*sin(t))' # 0.001s^{-1}
 # my_function = 'if(t<4,t,4+0.0002*sin(10*pi*t))' # 0.001s^{-1}
 # my_function = 'if(t<4,0.1*t,0.1*4+0.002*sin(10*pi*t))' # 0.001s^{-1}
-my_function = 'if(t<4,t,4+0.02*sin(10*pi*t))' # 0.001s^{-1}
-my_end_time = 300 #60 #4e2
+my_function = 'if(t<4,0.1*t,0.4+0.002*sin(10*pi*t))' # 0.001s^{-1}
+my_end_time = 60 #60 #4e2
 # my_yield_0 = 700 # MPa
 
-my_xmax = 30.0e1 # 3.0e3 30.0 #
-my_ymax = 10.0e1 # 1.0e3 10.0 #
+my_xmax = 30 # 3.0e3 30.0 #
+my_ymax = 10 # 1.0e3 10.0 #
 
-my_radius = 100.0 #10.0e1 # 1.0e3
-my_nx = 200 # 200 # 200 # 50
-my_ny = 50 # 50 # 50 # 20
+my_radius = 10.0 #10.0e1 # 1.0e3
+my_nx = 100 # 200 # 200 # 50
+my_ny = 25 # 50 # 50 # 20
 
 my_time_scale = 1.0e-9
 my_length_scale = 1.0e-9
 # my_pressure_scale = 1.0e6
 
-my_wGB = 15 # 8 for 002
+my_wGB = 1.5 # 8 for 002
 # my_yield_strength_init = 2e3
 
 [Functions]
   [./timestep_fn]
     type = ParsedFunction
-    value = 'if(t<10,0.15,5)'
+    value = 'if(t<4,0.1,0.2)'
   [../]
 []
 
@@ -165,6 +165,7 @@ my_wGB = 15 # 8 for 002
 
 [Kernels]
   [./PolycrystalKernel]
+    
   [../]
   [./PolycrystalElasticDrivingForce]
     # ACGrGrElasticDrivingForce
@@ -206,13 +207,13 @@ my_wGB = 15 # 8 for 002
   [../]
   [./eqv_plasticity_strain_1_aux]
     type = MaterialRealVectorValueAux
-    property = eqv_plasticity_strain
+    property = eqv_plastic_strain_op
     variable = eqv_plasticity_strain_1
     component = 0
   [../]
   [./eqv_plasticity_strain_2_aux]
     type = MaterialRealVectorValueAux
-    property = eqv_plasticity_strain
+    property = eqv_plastic_strain_op
     variable = eqv_plasticity_strain_2
     component = 1
   [../]
@@ -482,6 +483,11 @@ my_wGB = 15 # 8 for 002
 []
 
 [Postprocessors]
+  # [production_hardening]
+  #   type = ElementAverageMaterialPropertyOP
+  #   mat_prop = hard_factor
+  #   second_variable = gr0
+  # []
   [./timestep_pp]
     type = FunctionValuePostprocessor
     function = timestep_fn
@@ -633,6 +639,7 @@ my_wGB = 15 # 8 for 002
   # dtmax = 0.2
   start_time = 0.0
   end_time = ${my_end_time}
+  
   # dt = 'if(t<4,0.2,1)'
   
 
@@ -640,6 +647,7 @@ my_wGB = 15 # 8 for 002
     type = FunctionDT
     function = timestep_fn
     min_dt = 0.1
+    # num_steps = 1
   [../]
 
 
@@ -675,7 +683,7 @@ my_wGB = 15 # 8 for 002
   file_base = ./${my_filename}/out_${my_filename} 
   execute_on = 'timestep_end'
   [./my_exodus]
-    type = Exodus
+    type = VTK
     interval = 2
     # append_date = true
     # append_date_format = '%Y-%m-%d'
@@ -685,17 +693,17 @@ my_wGB = 15 # 8 for 002
   csv = true
   [./my_console]
     type = Console
-    output_linear = false
+    output_linear = False
     # output_screen = false
     # interval = 5
   [../]
-  [./pgraph]
-    type = PerfGraphOutput
-    execute_on = 'initial timestep_end'  # Default is "final"
-    level = 2                     # Default is 1
-    heaviest_branch = true        # Default is false
-    heaviest_sections = 7         # Default is 0
-    # interval = 5
-  [../]
+  # [./pgraph]
+  #   type = PerfGraphOutput
+  #   execute_on = 'initial timestep_end'  # Default is "final"
+  #   level = 2                     # Default is 1
+  #   heaviest_branch = true        # Default is false
+  #   heaviest_sections = 7         # Default is 0
+  #   # interval = 5
+  # [../]
 []
 
