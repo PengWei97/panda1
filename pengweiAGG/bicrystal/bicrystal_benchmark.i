@@ -1,23 +1,18 @@
-#  tri-grain model,500K,stretch 5%,left right fixed
-#  1000*600,gr0 gr1 gr2
-#  add Stress component
-#  hcp
-
-my_filename = 'biBenchmark_refine2' 
+my_filename = 'FCC_Cu_TRI3' 
 # my_nx = 50 
 # my_ny = 50 
 
-my_num_adaptivity = 2
+my_num_adaptivity = 3
 my_interval = 2
 
 [Mesh]
   type = GeneratedMesh
   dim = 2
-  nx = 50
-  ny = 50
+  nx = 25
+  ny = 25
   xmax = 1000
   ymax = 1000
-  elem_type = QUAD4
+  elem_type = TRI3
   uniform_refine = 0
 []
 
@@ -52,8 +47,10 @@ my_interval = 2
     execute_on = 'initial timestep_begin'
     flood_entity_type = ELEMENTAL
 
-    C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5'
+    C_ijkl = '1.27e5 0.708e5 0.708e5 1.27e5 0.708e5 1.27e5 0.7355e5 0.7355e5 0.7355e5' # FCC Cu
+    # C_ijkl = '2.31e5 1.347e5 1.347e5 2.31e5 1.347e5 2.31e5 1.164e5 1.164e5 1.164e5'    # BCC Fe
     # C_ijkl = '1.94e5 0.655e5 0.698e5 1.94e5 0.698e5 1.98e5 0.4627e5 0.4627e5 0.6435e5' # Titanium,2,0Pa，可行
+    # C_ijkl = '1.60e5 0.90e5 0.66e5 1.60e5 0.66e5 1.81e5 0.465e5 0.465e5 0.35e5' 
     
     fill_method = symmetric9
     euler_angle_provider = euler_angle_file
@@ -382,9 +379,9 @@ my_interval = 2
   [../]
   [./Adaptivity]
     initial_adaptivity = ${my_num_adaptivity}
-    refine_fraction = 0.8
-    coarsen_fraction = 0.05
-    max_h_level = 3
+    refine_fraction = 0.8 # The fraction of elements or error to refine. Should be between 0 and 1.
+    coarsen_fraction = 0.05 # 0.05 Fraction of low error that will coarsened
+    max_h_level = ${my_num_adaptivity}
   [../]
 []
 

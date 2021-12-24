@@ -165,18 +165,18 @@ protected:
    */
   Real getdYieldStressdPlasticStrain(const Real equivalent_plastic_strain, const Real hf);
 
-  void computeHardFactor();
+  void computeHardFactor(Real & eqvpstrain,RankTwoTensor & plastic_strain);
 
-  void computeIntegral(Real & material_property); // Real & eqv_pstrain,
+  // void computeIntegral(Real & material_property); // Real & eqv_pstrain,
 
-  // Real computeQpIntegral(); // Real & eqv_pstrain,
+  // // Real computeQpIntegral(); // Real & eqv_pstrain,
 
-  // RealVectorValue computeIntegral();
+  // // RealVectorValue computeIntegral();
 
-  // Real computerGBs();
-  template <typename T>
-  void gatherSum(T & value)
-  {
-    _communicator.sum(value);
-  }
+  // // Real computerGBs();
+  // template <typename T>
+  // void gatherSum(T & value)
+  // {
+  //   _communicator.sum(value);
+  // }
 };

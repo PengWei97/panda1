@@ -1,4 +1,4 @@
-my_filename = 'test02_07'
+my_filename = 'test02_12_VTK'
 # my_function = 'if(t<40,t,40+0.02*sin(t))' # 0.001s^{-1}
 # my_function = 'if(t<4,t,4+0.0002*sin(10*pi*t))' # 0.001s^{-1}
 # my_function = 'if(t<4,0.1*t,0.1*4+0.002*sin(10*pi*t))' # 0.001s^{-1}
@@ -23,7 +23,7 @@ my_wGB = 1.5 # 8 for 002
 [Functions]
   [./timestep_fn]
     type = ParsedFunction
-    value = 'if(t<4,0.1,5)'
+    value = 'if(t<4,0.1,0.2)'
   [../]
 []
 
@@ -483,11 +483,11 @@ my_wGB = 1.5 # 8 for 002
 []
 
 [Postprocessors]
-  [production_hardening]
-    type = ElementAverageMaterialPropertyOP
-    mat_prop = hard_factor
-    second_variable = gr0
-  []
+  # [production_hardening]
+  #   type = ElementAverageMaterialPropertyOP
+  #   mat_prop = hard_factor
+  #   second_variable = gr0
+  # []
   [./timestep_pp]
     type = FunctionValuePostprocessor
     function = timestep_fn
@@ -683,7 +683,7 @@ my_wGB = 1.5 # 8 for 002
   file_base = ./${my_filename}/out_${my_filename} 
   execute_on = 'timestep_end'
   [./my_exodus]
-    type = Exodus
+    type = VTK
     interval = 2
     # append_date = true
     # append_date_format = '%Y-%m-%d'

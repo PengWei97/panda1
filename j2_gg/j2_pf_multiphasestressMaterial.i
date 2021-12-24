@@ -294,15 +294,15 @@ my_wGB = 1.5 # 8 for 002
   [../]
 
   # global free energy
-  [./elastic_free_energy]
-    type = DerivativeMultiPhaseMaterial
-    f_name = F # base name of the free energy function (used to name the material properties)
-    fi_names = 'Fe1  Fe1' # List of free energies for the n phases
-    hi_names = 'h1  h2' # Switching Function Materials that provide h(eta_i)
-    etas     = 'gr0 gr1' # Order parameters for all phases.
-    # args = 'c' # Arguments of the fi free energies - use vector coupling
-    W = 0 # Energy barrier for the phase transformation from A to B
-  [../]
+  # [./elastic_free_energy]
+  #   type = DerivativeMultiPhaseMaterial
+  #   f_name = F # base name of the free energy function (used to name the material properties)
+  #   fi_names = 'Fe1  Fe1' # List of free energies for the n phases
+  #   hi_names = 'h1  h2' # Switching Function Materials that provide h(eta_i)
+  #   etas     = 'gr0 gr1' # Order parameters for all phases.
+  #   # args = 'c' # Arguments of the fi free energies - use vector coupling
+  #   W = 0 # Energy barrier for the phase transformation from A to B
+  # [../]
 
   # Generate the global stress from the phase stresses
   [./global_stress]
