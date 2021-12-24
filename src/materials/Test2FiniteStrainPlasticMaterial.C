@@ -617,36 +617,6 @@ Test2FiniteStrainPlasticMaterial::computeHardFactor(Real & eqvpstrain,RankTwoTen
 
 
 // std::vector<Real> 
-<<<<<<< HEAD
-void
-Test2FiniteStrainPlasticMaterial::computeIntegral(Real & eqven_pstrain) // Real & eqv_pstrain, 
-{
-  const auto & op_to_grains = _grain_tracker.getVarToFeatureVector(_current_elem->id());
-  std::vector<Real> sum(2, 0); //
-  std::vector<Real> area(2, 0); // 
-  Real sum_hh = 0.0;
-  // Real eqv_strain = 0.0;
-  // std::vector<Real> average(2, 0);
-  // RealVectorValue average;
-  // _real_vec_prop[_qp](0) = 6;
-  // if (_grain_boundary[_qp] <= 0.60)
-  //   {
-  //     eqven_pstrain = 0.0;
-  //     eqven_pstrain += _eqv_plasticity_strain[_qp](op_index)*hh;
-  //     sum_hh += hh;
-  //     _eqv_plasticity_strain[_qp] = 0;
-  //   }    
-  for (MooseIndex(op_to_grains) op_index = 0; op_index < op_to_grains.size(); ++op_index) // 遍历 gr0 gr1
-  {   
-    Real hh = (1.0 + std::sin(libMesh::pi * ((*_vals[op_index])[_qp] - 0.5))) / 2.0; // 插值函数
-
-    for (int qp = 0; qp < _qrule->n_points(); qp++)
-    {
-      Real h = (1.0 + std::sin(libMesh::pi * ((*_vals[op_index])[qp] - 0.5))) / 2.0; // 插值函数
-      sum[op_index] += _JxW[qp] * _coord[qp] * _eqv_plastic_strain[qp] * h; // 计算对于每个序参数gr_i每个网格上的等效塑性应变比重，$\sum_{i = 1}^{N}{h(\eta_i)\bar{\varepsilon}^p}$ 
-      area[op_index] += _JxW[qp] * _coord[qp] * h; // 每个序参数所占据的总面积；
-    }
-=======
 // void
 // Test2FiniteStrainPlasticMaterial::computeIntegral(Real & material_property) // Real & eqv_pstrain, 
 // {
@@ -693,7 +663,6 @@ Test2FiniteStrainPlasticMaterial::computeIntegral(Real & eqven_pstrain) // Real 
     // average = sum[0]/area[0];
     // std::cout << "average = " << average << std::endl;
   // _eqv_plastic_strain_op[_qp](1) = sum[1]/area[1];
->>>>>>> 44cc8e023973ccf6c4a443a690178e26204a8d48
 
     // eqven_pstrain = 0.0;
 // }
