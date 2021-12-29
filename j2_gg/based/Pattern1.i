@@ -36,7 +36,7 @@
 [GlobalParams]
   # CahnHilliard needs the third derivatives
   derivative_order = 3
-  enable_jit = true
+  enable_jit = true # 
   displacements = 'disp_x disp_y'
 []
 
@@ -112,7 +112,7 @@
   [../]
 
   # Lagrange-multiplier
-  [./lambda]
+  [./lambda] 
     order = FIRST
     family = LAGRANGE
     initial_condition = 1.0
@@ -148,18 +148,19 @@
     mob_name = L1
     f_name = F
   [../]
-  [./ACInterface1]
-    type = ACMultiInterface
+  [./ACInterface1]  
+    type = ACMultiInterface # Gradient energy Allen-Cahn Kernel with cross terms
     variable = eta1
-    etas = 'eta1 eta2 eta3'
+    etas = 'eta1 eta2 eta3' # all non-conserved order parameters in the system
     mob_name = L1
-    kappa_names = 'kappa11 kappa12 kappa13'
+    kappa_names = 'kappa11 kappa12 kappa13' # The kappa used with the kernel
   [../]
   [./lagrange1]
-    type = SwitchingFunctionConstraintEta
+    type = SwitchingFunctionConstraintEta # Lagrange multiplier kernel to constrain the sum of all switching functions in a multiphase system.
+    # the total weight of all phase free energy contributions at each point in the simulation volume is exactly unity
     variable = eta1
-    h_name   = h1
-    lambda = lambda
+    h_name   = h1 # Switching Function Materials that provides h(eta_i)
+    lambda = lambda # Lagrange multiplier
   [../]
 
   # Allen-Cahn and Lagrange-multiplier constraint kernels for order parameter 2
@@ -341,6 +342,7 @@
   [./barrier]
     type = MultiBarrierFunctionMaterial
     etas = 'eta1 eta2 eta3'
+    # Double well phase transformation barrier free energy contribution.
   [../]
 
   # chemical free energies
@@ -390,37 +392,39 @@
   [../]
 
   # # phase free energies (chemical + elastic)
-  # [./phase_free_energy_1]
-  #   type = DerivativeSumMaterial
-  #   f_name = F1
-  #   sum_materials = 'Fc1 Fe1'
-  #   args = 'c'
-  #   derivative_order = 2
-  # [../]
-  # [./phase_free_energy_2]
-  #   type = DerivativeSumMaterial
-  #   f_name = F2
-  #   sum_materials = 'Fc2 Fe2'
-  #   args = 'c'
-  #   derivative_order = 2
-  # [../]
-  # [./phase_free_energy_3]
-  #   type = DerivativeSumMaterial
-  #   f_name = F3
-  #   sum_materials = 'Fc3 Fe3'
-  #   args = 'c'
-  #   derivative_order = 2
-  # [../]
+  [./phase_free_energy_1]
+    type = DerivativeSumMaterial
+    f_name = F1
+    sum_materials = 'Fc1 Fe1'
+    args = 'c'
+    derivative_order = 2
+  [../]
+  [./phase_free_energy_2]
+    type = DerivativeSumMaterial
+    f_name = F2
+    sum_materials = 'Fc2 Fe2'
+    args = 'c'
+    derivative_order = 2
+  [../]
+  [./phase_free_energy_3]
+    type = DerivativeSumMaterial
+    f_name = F3
+    sum_materials = 'Fc3 Fe3'
+    args = 'c'
+    derivative_order = 2
+  [../]
 
   # global free energy
   [./free_energy]
     type = DerivativeMultiPhaseMaterial
+    # Two phase material that combines n phase materials using a switching function with and n non-conserved order parameters
     f_name = F
     fi_names = 'F1  F2  F3'
     hi_names = 'h1  h2  h3'
     etas     = 'eta1 eta2 eta3'
-    args = 'c'
-    W = 3
+    args = 'c' # Arguments of the fi free energies - use vector coupling
+    # 如果不求c可以不输入args
+    W = 3 # Energy barrier for the phase transformation from A to B
   [../]
 
   # Generate the global stress from the phase stresses

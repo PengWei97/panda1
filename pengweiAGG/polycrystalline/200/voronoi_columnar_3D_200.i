@@ -94,7 +94,7 @@ my_filename = 'GG_exmaples200_3D'
 []
 
 [Postprocessors]
-  active = ''
+  # active = ''
   [./ngrains]
     type = FeatureFloodCount
     variable = bnds
@@ -108,11 +108,11 @@ my_filename = 'GG_exmaples200_3D'
   [./dt]
     type = TimestepSize
   [../]
-  [./avg_grain_volumes]
-    type = AverageGrainVolume
-    feature_counter = grain_tracker
-    execute_on = 'initial timestep_end'
-  [../]
+  # [./avg_grain_volumes]
+  #   type = AverageGrainVolume
+  #   feature_counter = grain_tracker
+  #   execute_on = 'initial timestep_end'
+  # [../]
 []
 
 [Executioner]

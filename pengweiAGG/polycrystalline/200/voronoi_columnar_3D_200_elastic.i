@@ -1,4 +1,5 @@
 my_filename = 'GG_exmaples200_elastic_3D' 
+my_function = 'if(t<4,0.1*t,0.4+0.002*sin(10*pi*t))' # 0.001s^{-1}
 
 [Mesh]
   type = GeneratedMesh
@@ -111,15 +112,15 @@ my_filename = 'GG_exmaples200_elastic_3D'
     [../]
   [../]
   [./top_displacement]
-    type = DirichletBC
+    type = FunctionDirichletBC
     variable = disp_y
     boundary = top
-    value = 20.0
+    function = ${my_function}
   [../]
   [./x_anchor]
     type = DirichletBC
     variable = disp_x
-    boundary = 'left right'
+    boundary = left
     value = 0.0
   [../]
   [./y_anchor]
@@ -165,7 +166,7 @@ my_filename = 'GG_exmaples200_elastic_3D'
 []
 
 [Postprocessors]
-  active = ''
+  # active = ''
   [./ngrains]
     type = FeatureFloodCount
     variable = bnds
@@ -211,7 +212,7 @@ my_filename = 'GG_exmaples200_elastic_3D'
 
   [./TimeStepper]
     type = IterationAdaptiveDT
-    dt = 0.1
+    dt = 0.01
     growth_factor = 1.2
     cutback_factor = 0.8
     optimal_iterations = 8
