@@ -2,10 +2,10 @@
 # mkdir ../include/materials
 # mkdir ../src/materials
 
-cp ~/projects/moose/modules/tensor_mechanics/include/materials/FiniteStrainPlasticMaterial.h ~/projects/panda/include/materials/Test1FiniteStrainPlasticMaterial.h
+cp ~/projects/moose/modules/phase_field/include/materials/DerivativeMultiPhaseMaterial.h ~/projects/panda/include/materials/DerivativeGrainGrowthMaterial.h
 
-cp ~/projects/moose/modules/tensor_mechanics/src/materials/FiniteStrainPlasticMaterial.C ~/projects/panda/src/materials/Test1FiniteStrainPlasticMaterial.C
+cp ~/projects/moose/modules/phase_field/src/materials/DerivativeMultiPhaseMaterial.C ~/projects/panda/src/materials/DerivativeGrainGrowthMaterial.C
 
-code ~/projects/panda/include/materials/ACGrGrElasticDrivingForce.h
-code ~/projects/panda/src/materials/ACGrGrElasticDrivingForce.C
+code ~/projects/panda/include/materials/DerivativeGrainGrowthMaterial.h
+code ~/projects/panda/src/materials/DerivativeGrainGrowthMaterial.C
     

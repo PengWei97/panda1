@@ -1,4 +1,4 @@
-my_filename = 'Pattern1_gg_elastic' 
+my_filename = 'Pattern1_gg_polycrystal' 
 my_num_adaptivity = 3
 my_interval = 2
 
@@ -89,11 +89,11 @@ my_interval = 2
   [../]
 
   # Lagrange-multiplier
-  [./lambda] 
-    order = FIRST
-    family = LAGRANGE
-    initial_condition = 1.0
-  [../]
+  # [./lambda] 
+  #   order = FIRST
+  #   family = LAGRANGE
+  #   initial_condition = 1.0
+  # [../]
 []
 
 [UserObjects]
@@ -109,11 +109,9 @@ my_interval = 2
   # Set up stress divergence kernels
   [./TensorMechanics]
   [../]
-
-  # Allen-Cahn and Lagrange-multiplier constraint kernels for order parameter 1
-  [./dgr0dt]
-    type = TimeDerivative
-    variable = gr0
+  # [./PolycrystalElasticDrivingForce]
+  # [../]
+  [./PolycrystalKernel]
   [../]
   [./ACBulk1]
     type = AllenCahn
@@ -122,26 +120,15 @@ my_interval = 2
     mob_name = L
     f_name = F
   [../]
-  [./ACInterface1]  
-    type = ACMultiInterface # Gradient energy Allen-Cahn Kernel with cross terms
-    variable = gr0
-    etas = 'gr0 gr1' # all non-conserved order parameters in the system
-    mob_name = L
-    kappa_names = 'kappa_op kappa_op' # The kappa used with the kernel
-  [../]
-  [./lagrange1]
-    type = SwitchingFunctionConstraintEta # Lagrange multiplier kernel to constrain the sum of all switching functions in a multiphase system.
-    # the total weight of all phase free energy contributions at each point in the simulation volume is exactly unity
-    variable = gr0
-    h_name   = h1 # Switching Function Materials that provides h(eta_i)
-    lambda = lambda # Lagrange multiplier
-  [../]
+  # [./lagrange1]
+  #   type = SwitchingFunctionConstraintEta # Lagrange multiplier kernel to constrain the sum of all switching functions in a multiphase system.
+  #   # the total weight of all phase free energy contributions at each point in the simulation volume is exactly unity
+  #   variable = gr0
+  #   h_name   = h1 # Switching Function Materials that provides h(eta_i)
+  #   lambda = lambda # Lagrange multiplier
+  # [../]
 
   # Allen-Cahn and Lagrange-multiplier constraint kernels for order parameter 2
-  [./dgr1dt]
-    type = TimeDerivative
-    variable = gr1
-  [../]
   [./ACBulk2]
     type = AllenCahn
     variable = gr1
@@ -149,28 +136,21 @@ my_interval = 2
     mob_name = L
     f_name = F
   [../]
-  [./ACInterface2]
-    type = ACMultiInterface
-    variable = gr1
-    etas = 'gr0 gr1'
-    mob_name = L
-    kappa_names = 'kappa_op kappa_op '
-  [../]
-  [./lagrange2]
-    type = SwitchingFunctionConstraintEta
-    variable = gr1
-    h_name   = h2
-    lambda = lambda
-  [../]
+  # [./lagrange2]
+  #   type = SwitchingFunctionConstraintEta
+  #   variable = gr1
+  #   h_name   = h2
+  #   lambda = lambda
+  # [../]
 
   # Lagrange-multiplier constraint kernel for lambda
-  [./lagrange]
-    type = SwitchingFunctionConstraintLagrange
-    variable = lambda
-    etas    = 'gr0 gr1'
-    h_names = 'h1   h2'
-    epsilon = 1e-6
-  [../]
+  # [./lagrange]
+  #   type = SwitchingFunctionConstraintLagrange
+  #   variable = lambda
+  #   etas    = 'gr0 gr1'
+  #   h_names = 'h1   h2'
+  #   epsilon = 1e-6
+  # [../]
 []
 
 [Materials]
@@ -195,14 +175,14 @@ my_interval = 2
 
   # We use this to output the level of constraint enforcement
   # ideally it should be 0 everywhere, if the constraint is fully enforced
-  [./etasummat]
-    type = ParsedMaterial
-    f_name = etasum
-    args = 'gr0 gr1'
-    material_property_names = 'h1 h2'
-    function = 'h1+h2-1'
-    outputs = my_exodus
-  [../]
+  # [./etasummat]
+  #   type = ParsedMaterial
+  #   f_name = etasum
+  #   args = 'gr0 gr1'
+  #   material_property_names = 'h1 h2'
+  #   function = 'h1+h2-1'
+  #   outputs = my_exodus
+  # [../]
 
   # matrix phase
   [./elasticity_tensor_1]
@@ -259,32 +239,6 @@ my_interval = 2
     h_order = SIMPLE
   [../]
 
-  # [./barrier]
-  #   type = MultiBarrierFunctionMaterial
-  #   etas = 'gr0 gr1 eta3'
-  #   # Double well phase transformation barrier free energy contribution.
-  # [../]
-
-  # chemical free energies
-  [./chemical_free_energy_1]
-    type = DerivativeParsedMaterial
-    args = 'gr0 gr1'
-    f_name = Fc1
-    material_property_names = 'mu gamma_asymm'
-    function = 'mu*( gr0^4/4.0 - gr0^2/2.0 + gamma_asymm/2*gr0^2*gr1^2)+1/8'  
-    derivative_order = 2
-    # enable_jit = true
-  [../]
-  [./chemical_free_energy_2]
-    type = DerivativeParsedMaterial
-    args = 'gr0 gr1'
-    f_name = Fc2
-    material_property_names = 'mu gamma_asymm'
-    function = 'mu*( gr1^4/4.0 - gr1^2/2.0 + gamma_asymm/2*gr0^2*gr1^2)+1/8'    
-    derivative_order = 2
-    # enable_jit = true
-  [../]
-
   # elastic free energies
   [./elastic_free_energy_1]
     type = ElasticEnergyMaterial
@@ -301,21 +255,21 @@ my_interval = 2
     args = 'gr0 gr1' # should be empty
   [../]
 
-  # # phase free energies (chemical + elastic)
-  [./phase_free_energy_1]
-    type = DerivativeSumMaterial
-    f_name = F1
-    sum_materials = 'Fc1 Fe1'
-    args = 'gr0 gr1'
-    derivative_order = 2
-  [../]
-  [./phase_free_energy_2]
-    type = DerivativeSumMaterial
-    f_name = F2
-    sum_materials = 'Fc2 Fe2'
-    args = 'gr0 gr1'
-    derivative_order = 2
-  [../]
+  # # # phase free energies (chemical + elastic)
+  # [./phase_free_energy_1]
+  #   type = DerivativeSumMaterial
+  #   f_name = F1
+  #   sum_materials = 'Fc1 Fe1'
+  #   args = 'gr0 gr1'
+  #   derivative_order = 2
+  # [../]
+  # [./phase_free_energy_2]
+  #   type = DerivativeSumMaterial
+  #   f_name = F2
+  #   sum_materials = 'Fc2 Fe2'
+  #   args = 'gr0 gr1'
+  #   derivative_order = 2
+  # [../]
 
   [./barrier]
     type = MultiBarrierFunctionMaterial
@@ -328,7 +282,7 @@ my_interval = 2
     type = DerivativeMultiPhaseMaterial
     # Two phase material that combines n phase materials using a switching function with and n non-conserved order parameters
     f_name = F
-    fi_names = 'F1  F2'
+    fi_names = 'Fe1  Fe2'
     hi_names = 'h1  h2'
     etas     = 'gr0 gr1'
     # args = 'gr0 gr1' # Arguments of the fi free energies - use vector coupling

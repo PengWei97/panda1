@@ -5,9 +5,9 @@ def writesh(dirname, filename,editFileName, threads, file, outputshfilename):
 # mkdir ../include/%s
 # mkdir ../src/%s
 
-cp ~/projects/moose/modules/tensor_mechanics/include/%s/%s.h ~/projects/panda/include/%s/%s.h
+cp ~/projects/moose/modules/phase_field/include/%s/%s.h ~/projects/panda/include/%s/%s.h
 
-cp ~/projects/moose/modules/tensor_mechanics/src/%s/%s.C ~/projects/panda/src/%s/%s.C
+cp ~/projects/moose/modules/phase_field/src/%s/%s.C ~/projects/panda/src/%s/%s.C
 
 code ~/projects/panda/include/%s/%s.h
 code ~/projects/panda/src/%s/%s.C
@@ -16,10 +16,4 @@ code ~/projects/panda/src/%s/%s.C
         f.write(shfile)
     f.close()
 
-writesh( "postprocessors", "AverageNodalVariableValue","AverageNodalVariableValueOP", 1, 1, "4.sh")
-# E:\Github\moose\modules\phase_field\include\kernels\ACGrGrElasticDrivingForce.h
-# E:\Github\moose\modules\phase_field\include\materials\ElasticEnergyMaterial.h
-# E:\Github\moose\modules\tensor_mechanics\include\materials\ComputeLinearElasticStress.h
-
-# mkdir ~/projects/panda/src/postprocessors
-# mkdir ~/projects/panda/include/postprocessors
+writesh( "materials", "DerivativeMultiPhaseMaterial","DerivativeGrainGrowthMaterial", 1, 1, "1.sh")
