@@ -16,4 +16,6 @@ code ~/projects/panda/src/%s/%s.C
         f.write(shfile)
     f.close()
 
-writesh( "materials", "DerivativeMultiPhaseMaterial","DerivativeGrainGrowthMaterial", 1, 1, "1.sh")
+writesh( "materials", "ComputePolycrystalElasticityTensor","ComputePolycrystalElasticityTensorGG", 1, 1, "1.sh")
+
+# E:\Github\moose\moose\modules\phase_field\src\materials\ComputePolycrystalElasticityTensor.C
