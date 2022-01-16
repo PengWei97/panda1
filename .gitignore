@@ -89,7 +89,10 @@ temp_print_trace.*
 *.json
 *.json.*
 *.bak
+<<<<<<< HEAD
 *.data
+=======
+>>>>>>> 41da2880cab3f18fdf679856425fcbae71e43f43
 *.processor.*
 .clang_complete
 .failed_tests
