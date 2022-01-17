@@ -1,3 +1,5 @@
+my_filename = 'GG_exmaples200_2D_xy' 
+
 [Mesh]
   type = GeneratedMesh
   dim = 2
@@ -38,6 +40,7 @@
   [./voronoi]
     type = PolycrystalVoronoi
     coloring_algorithm = jp
+    rand_seed = 300
   [../]
   [./grain_tracker]
     type = GrainTrackerElasticity
@@ -223,7 +226,7 @@
 [BCs]
   [./Periodic]
     [./All]
-      auto_direction = 'x'
+      auto_direction = 'x y'
       variable = 'gr0 gr1 gr2 gr3 gr4 gr5 gr6 gr7'
     [../]
   [../]
@@ -231,7 +234,7 @@
     type = DirichletBC
     variable = disp_y
     boundary = top
-    value = 20.0
+    value = 0.0
   [../]
   [./x_anchor]
     type = DirichletBC
@@ -327,7 +330,7 @@
   nl_rel_tol = 1.0e-7
 
   start_time = 0.0
-  end_time = 5000.0
+  end_time = 10000.0
 
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -346,14 +349,14 @@
 []
 
 [Outputs]
-  file_base = poly200_grtracker_fcc
+  file_base = ./${my_filename}/out_${my_filename}
  # csv = true
   [./csv]
     type = CSV
     interval = 4
   [../]
   [./exodus]
-    type = Exodus
+    type = Nemesis
     interval = 2
   [../]
   # [./console]
@@ -373,6 +376,3 @@
     heaviest_sections = 7         # Default is 0
   []
 []
-
-
-# =0.5*(elastic_strain11*stress11+2*elastic_strain12*stress12+elastic_strain22*stress22)

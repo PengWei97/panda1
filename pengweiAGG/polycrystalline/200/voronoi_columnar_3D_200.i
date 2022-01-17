@@ -1,4 +1,4 @@
-my_filename = 'GG_exmaples200_3D' 
+my_filename = 'GG_exmaples200_3D_statistic' 
 
 [Mesh]
   type = GeneratedMesh
@@ -13,11 +13,13 @@ my_filename = 'GG_exmaples200_3D'
   zmin = 0
   zmax = 25
   elem_type = HEX8
-  uniform_refine = 2
+  uniform_refine = 1
+
+  parallel_type = distributed # Periodic BCs
 []
 
 [GlobalParams]
-  op_num = 8
+  op_num = 15
   var_name_base = gr
   grain_num = 200
 []
@@ -34,6 +36,13 @@ my_filename = 'GG_exmaples200_3D'
     columnar_3D = true
     coloring_algorithm = jp
   [../]
+  [./grain_tracker]
+    type = GrainTracker
+    threshold = 0.2
+    connecting_threshold = 0.08
+    compute_halo_maps = true # Only necessary for displaying HALOS
+    compute_var_to_feature_map = true  # for FeatureVolumeVectorPostprocessor
+  [../]
 []
 
 [ICs]
@@ -49,6 +58,10 @@ my_filename = 'GG_exmaples200_3D'
     order = FIRST
     family = LAGRANGE
   [../]
+  [./unique_grains]
+    order = CONSTANT
+    family = MONOMIAL
+  [../]
 []
 
 [Kernels]
@@ -61,6 +74,13 @@ my_filename = 'GG_exmaples200_3D'
     type = BndsCalcAux
     variable = bnds
     execute_on = timestep_end
+  [../]
+  [./unique_grains]
+    type = FeatureFloodCountAux
+    variable = unique_grains
+    flood_counter = grain_tracker
+    field_display = UNIQUE_REGION
+    execute_on = 'initial timestep_end'
   [../]
 []
 
@@ -100,6 +120,9 @@ my_filename = 'GG_exmaples200_3D'
     variable = bnds
     threshold = 0.7
   [../]
+  [./dofs]
+    type = NumDOFs
+  [../]
   [./run_time]
     type = PerfGraphData
     section_name = "Root"
@@ -108,27 +131,36 @@ my_filename = 'GG_exmaples200_3D'
   [./dt]
     type = TimestepSize
   [../]
-  # [./avg_grain_volumes]
-  #   type = AverageGrainVolume
-  #   feature_counter = grain_tracker
-  #   execute_on = 'initial timestep_end'
-  # [../]
+  [./avg_grain_volumes]
+    type = AverageGrainVolume
+    feature_counter = grain_tracker
+    execute_on = 'initial timestep_end'
+  [../]
+[]
+
+[VectorPostprocessors]
+  [./grain_volumes]
+    type = FeatureVolumeVectorPostprocessor
+    flood_counter = grain_tracker
+    execute_on = 'initial timestep_end'
+  #  output_centroids = true
+  [../]
 []
 
 [Executioner]
   type = Transient
-  scheme = 'bdf2'
-  solve_type = 'PJFNK'
+  scheme = bdf2
+  solve_type = PJFNK
+  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
+  petsc_options_value = 'hypre boomeramg 31 0.7'
 
-  petsc_options_iname = '-pc_type -pc_hypre_type -ksp_gmres_restart'
-  petsc_options_value = 'hypre boomeramg 31'
+  l_tol = 1.0e-4
+  l_max_its = 30
+  nl_max_its = 25
+  nl_rel_tol = 1.0e-7
 
-  l_tol = 1.0e-5
-  l_max_its = 15
-  nl_max_its = 20
-  nl_rel_tol = 1.0e-10
   start_time = 0.0
-  dt = 5000.0
+  end_time = 10000.0
 
   [./TimeStepper]
     type = IterationAdaptiveDT
@@ -139,10 +171,10 @@ my_filename = 'GG_exmaples200_3D'
   [../]
 
   [./Adaptivity]
-    initial_adaptivity = 2
+    initial_adaptivity = 4
     refine_fraction = 0.8
-    coarsen_fraction = 0.05
-    max_h_level = 3
+    coarsen_fraction = 0.1
+    max_h_level = 4
   [../]
 []
 
@@ -155,11 +187,11 @@ my_filename = 'GG_exmaples200_3D'
   [../]
   [./exodus]
     type = Nemesis
-    # interval = 2
+    interval = 2
   [../]
   [pgraph]
     type = PerfGraphOutput
-    execute_on = 'initial final'  # Default is "final"
+    execute_on = 'initial timestep_end'  # Default is "final"
     level = 2                     # Default is 1
     heaviest_branch = true        # Default is false
     heaviest_sections = 7         # Default is 0
